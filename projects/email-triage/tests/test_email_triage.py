@@ -43,6 +43,7 @@ def test_health_check():
     data = res.json()
     assert data["status"] == "ok"
     assert data["service"] == "email-triage"
+    assert "vercel-ai-gateway" in data["providers"]
 
 def test_email_triage_html_routes():
     """Verify that dashboard HTML endpoints render successfully."""
@@ -221,3 +222,74 @@ def test_api_categorize_clef_provider_selection():
             _, kwargs = mock_classify.call_args
             assert kwargs["provider"] == "cloudflare"
             assert kwargs["model"] == "@cf/cloudflare/clef-flash"
+
+@pytest.mark.asyncio
+async def test_classify_vercel_laya_free_format():
+    """Verify classify_single_email processes Vercel AI Gateway Laya Free response correctly."""
+    mock_vercel_response = {
+        "answers": {
+            "is_irrelevant": {"type": "boolean", "probability": 0.05},
+            "category": {
+                "type": "choice",
+                "choice": "work",
+                "probabilities": {"work": 0.92, "irrelevant": 0.08}
+            },
+            "urgency": {"type": "score", "score": 0.35},
+            "action_required": {"type": "boolean", "probability": 0.15}
+        }
+    }
+
+    mock_client = MagicMock()
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = mock_vercel_response
+    mock_client.post = pytest.importorskip("unittest.mock").AsyncMock(return_value=mock_resp)
+
+    res = await email_triage.classify_single_email(
+        http_client=mock_client,
+        email=MOCK_ENVELOPES[0],
+        provider="vercel",
+        model="convaiinnovations/laya-free",
+        vercel_token="fake-vercel-key"
+    )
+
+    assert res["category"] == "work"
+    assert res["is_irrelevant_prob"] == 0.0  # allowlisted sender
+    assert res["urgency_score"] == 0.35
+    assert res["provider"] == "vercel"
+    assert res["model"] == "convaiinnovations/laya-free"
+
+def test_api_categorize_vercel_provider_selection():
+    """Verify POST /api/email-triage/categorize passes Vercel AI Gateway options."""
+    mock_classified = {
+        "message_id": "1002",
+        "category": "freelance",
+        "is_irrelevant_prob": 0.02,
+        "urgency_score": 0.8,
+        "action_required_prob": 0.9,
+        "categorized_at": "2026-10-11T00:00:00Z",
+        "provider": "vercel",
+        "model": "convaiinnovations/laya-free"
+    }
+
+    with patch("email_triage.fetch_envelopes_from_himalaya", return_value=[MOCK_ENVELOPES[1]]):
+        with patch("email_triage.classify_single_email", return_value=mock_classified) as mock_classify:
+            with patch.object(email_triage, "VERCEL_AI_GATEWAY_API_KEY", "fake-key"):
+                res = client.post(
+                    "/api/email-triage/categorize",
+                    json={
+                        "email_ids": ["1002"],
+                        "force_refresh": True,
+                        "provider": "vercel",
+                        "model": "convaiinnovations/laya-free"
+                    }
+                )
+                assert res.status_code == 200
+                data = res.json()
+                assert data["categorized_count"] == 1
+                assert "1002" in data["results"]
+                assert data["results"]["1002"]["category"] == "freelance"
+                mock_classify.assert_called_once()
+                _, kwargs = mock_classify.call_args
+                assert kwargs["provider"] == "vercel"
+                assert kwargs["model"] == "convaiinnovations/laya-free"

@@ -15,7 +15,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any, Dict, List, Literal, Optional, Union
 
-ProviderName = Literal["typesafe", "openrouter", "cloudflare"]
+ProviderName = Literal["typesafe", "openrouter", "cloudflare", "vercel"]
 
 
 @dataclass
@@ -48,11 +48,13 @@ class DecisionResponse:
 
     def get_noul(self, question_id: str) -> float:
         ans = self.answers.get(question_id, {})
-        if isinstance(ans, dict) and "noul" in ans:
-            return float(ans["noul"])
+        if isinstance(ans, dict):
+            for k in ("noul", "probability", "prob", "score"):
+                if k in ans:
+                    return float(ans[k])
         if isinstance(ans, (int, float)):
             return float(ans)
-        raise KeyError(f"Question '{question_id}' not found or not a valid Noul answer")
+        raise KeyError(f"Question '{question_id}' not found or not a valid Noul/Boolean answer")
 
     def get_choice(self, question_id: str) -> ChoiceAnswer:
         ans = self.answers.get(question_id, {})
@@ -89,6 +91,8 @@ class DecisionClient:
         cloudflare_api_token: Optional[str] = None,
         cloudflare_account_id: Optional[str] = None,
         cloudflare_gateway_id: Optional[str] = None,
+        vercel_api_key: Optional[str] = None,
+        vercel_base_url: Optional[str] = None,
         timeout: int = 30,
     ):
         self.default_provider = default_provider
@@ -117,6 +121,18 @@ class DecisionClient:
             or os.getenv("CLOUDFLARE_GATEWAY_ID")
             or os.getenv("CF_GATEWAY_ID")
         )
+        self.vercel_api_key = (
+            vercel_api_key
+            or os.getenv("VERCEL_AI_GATEWAY_API_KEY")
+            or os.getenv("AI_GATEWAY_API_KEY")
+            or os.getenv("VERCEL_API_KEY")
+            or os.getenv("VERCEL_OIDC_TOKEN")
+        )
+        self.vercel_base_url = (
+            vercel_base_url
+            or os.getenv("VERCEL_AI_GATEWAY_BASE_URL")
+            or "https://ai-gateway.vercel.sh"
+        ).rstrip("/")
         self.timeout = timeout
 
     def decide(
@@ -133,7 +149,7 @@ class DecisionClient:
         Args:
             state: Text, JSON-compatible dict or list representing current application state.
             questions: Dictionary mapping question_id to question spec (noul, choice, or score).
-            provider: 'typesafe', 'openrouter', or 'cloudflare'. Defaults to instance setting.
+            provider: 'typesafe', 'openrouter', 'cloudflare', or 'vercel'. Defaults to instance setting.
             model: Model identifier override.
             images: Optional images (supported natively by Cloudflare Clef).
             extra_headers: Custom HTTP headers.
@@ -162,8 +178,15 @@ class DecisionClient:
                 images=images,
                 extra_headers=extra_headers,
             )
+        elif selected_provider == "vercel":
+            return self._call_vercel(
+                state=state,
+                questions=questions,
+                model=model or "convaiinnovations/laya-free",
+                extra_headers=extra_headers,
+            )
         else:
-            raise ValueError(f"Unknown provider '{selected_provider}'. Choose typesafe, openrouter, or cloudflare.")
+            raise ValueError(f"Unknown provider '{selected_provider}'. Choose typesafe, openrouter, cloudflare, or vercel.")
 
     def decide_with_fallback(
         self,
@@ -173,7 +196,7 @@ class DecisionClient:
         images: Optional[List[str]] = None,
     ) -> DecisionResponse:
         """Attempt primary provider and automatically fall back on errors."""
-        order = providers or ["cloudflare", "openrouter", "typesafe"]
+        order = providers or ["cloudflare", "vercel", "openrouter", "typesafe"]
         errors = []
 
         for p in order:
@@ -312,6 +335,60 @@ class DecisionClient:
         return DecisionResponse(
             provider="cloudflare",
             model=model_tag,
+            answers=answers,
+            raw=data,
+            usage=data.get("usage"),
+        )
+
+    def _call_vercel(
+        self,
+        state: Any,
+        questions: Dict[str, Any],
+        model: str,
+        extra_headers: Optional[Dict[str, str]] = None,
+    ) -> DecisionResponse:
+        if not self.vercel_api_key:
+            raise ValueError("VERCEL_AI_GATEWAY_API_KEY (or AI_GATEWAY_API_KEY) is not configured.")
+
+        headers = {
+            "Authorization": f"Bearer {self.vercel_api_key}",
+            "Content-Type": "application/json",
+        }
+        if extra_headers:
+            headers.update(extra_headers)
+
+        # Normalize endpoint selection based on model
+        clean_model = model
+        if clean_model in ("laya", "laya-free"):
+            clean_model = "convaiinnovations/laya-free"
+
+        if clean_model.startswith("typesafe-ai/") or clean_model.startswith("typesafe/"):
+            url = f"{self.vercel_base_url}/typesafe/v1/systemone"
+            payload = {
+                "model": clean_model,
+                "state": state,
+                "questions": questions,
+            }
+        else:
+            # Map noul to boolean for /v1/evaluate
+            mapped_q = {}
+            for qid, qspec in questions.items():
+                q_copy = dict(qspec)
+                if q_copy.get("type") == "noul":
+                    q_copy["type"] = "boolean"
+                mapped_q[qid] = q_copy
+            url = f"{self.vercel_base_url}/v1/evaluate"
+            payload = {
+                "model": clean_model,
+                "state": state,
+                "questions": mapped_q,
+            }
+
+        data = self._http_post(url, headers, payload)
+        answers = data.get("answers", data)
+        return DecisionResponse(
+            provider="vercel",
+            model=data.get("model", clean_model),
             answers=answers,
             raw=data,
             usage=data.get("usage"),

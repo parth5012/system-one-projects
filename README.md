@@ -54,7 +54,10 @@ system-one-projects/
 
 ### 1. [`projects/email-triage`](projects/email-triage)
 An autonomous email classification, spam filtration, and priority ranking engine.
-- Integrates **Himalaya CLI** (IMAP/SMTP) with **Cloudflare Clef-Flash** (9B) and **TypeSafe Jev** (1.13).
+- Multi-provider System One backends:
+  - **Cloudflare Workers AI**: `@cf/cloudflare/clef-flash` (9B, ~38ms) & `@cf/cloudflare/clef` (27B multimodal)
+  - **Vercel AI Gateway (Free Tier)**: `convaiinnovations/laya-free` (Convai Innovations Laya free-tier evaluation model) & `typesafe-ai/jev`
+  - **OpenRouter / TypeSafe**: `typesafe/jev-1.13`
 - Evaluates 4 decision propositions in parallel (`is_irrelevant`, `category`, `urgency`, `action_required`).
 - Built-in SQLite caching, audit trails, and sender domain allowlists.
 - Full interactive web dashboard with real-time multi-provider switching.

@@ -37,7 +37,7 @@ async def health():
         "status": "ok",
         "service": "email-triage",
         "engine": "system-one",
-        "providers": ["cloudflare-clef", "openrouter-jev"]
+        "providers": ["cloudflare-clef", "vercel-ai-gateway", "openrouter-jev"]
     }
 
 # Include Triage Router

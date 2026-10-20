@@ -99,13 +99,24 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api").rstrip("/")
 CLOUDFLARE_API_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "") or os.getenv("CLEF_API_TOKEN", "")
 CLOUDFLARE_ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID", "") or os.getenv("CLEF_ACCOUNT_ID", "")
+VERCEL_AI_GATEWAY_API_KEY = (
+    os.getenv("VERCEL_AI_GATEWAY_API_KEY", "")
+    or os.getenv("AI_GATEWAY_API_KEY", "")
+    or os.getenv("VERCEL_API_KEY", "")
+    or os.getenv("VERCEL_OIDC_TOKEN", "")
+)
+VERCEL_AI_GATEWAY_BASE_URL = os.getenv("VERCEL_AI_GATEWAY_BASE_URL", "https://ai-gateway.vercel.sh").rstrip("/")
 DEFAULT_PROVIDER = os.getenv(
     "DECISION_PROVIDER",
-    "cloudflare" if (CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID) else "openrouter"
+    "cloudflare" if (CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID) else (
+        "vercel" if VERCEL_AI_GATEWAY_API_KEY else "openrouter"
+    )
 ).lower()
 DEFAULT_MODEL = os.getenv(
     "DECISION_MODEL",
-    "@cf/cloudflare/clef-flash" if DEFAULT_PROVIDER == "cloudflare" else "typesafe/jev-1.13"
+    "@cf/cloudflare/clef-flash" if DEFAULT_PROVIDER == "cloudflare" else (
+        "convaiinnovations/laya-free" if DEFAULT_PROVIDER == "vercel" else "typesafe/jev-1.13"
+    )
 )
 HIMALAYA_BIN = os.getenv("HIMALAYA_BIN", "himalaya")
 
@@ -457,6 +468,7 @@ async def classify_single_email(
     provider: Optional[str] = None,
     cloudflare_token: Optional[str] = None,
     cloudflare_account_id: Optional[str] = None,
+    vercel_token: Optional[str] = None,
 ) -> Dict[str, Any]:
     subject = email.get("subject", "")
     from_info = email.get("from", [{}])
@@ -477,16 +489,23 @@ async def classify_single_email(
     if not selected_provider:
         if selected_model.startswith("@cf/") or "clef" in selected_model.lower():
             selected_provider = "cloudflare"
+        elif "laya" in selected_model.lower() or selected_model.startswith("typesafe-ai/") or "vercel" in selected_model.lower():
+            selected_provider = "vercel"
         elif "jev" in selected_model.lower():
             selected_provider = "openrouter"
         else:
             selected_provider = DEFAULT_PROVIDER
 
     if selected_provider == "cloudflare":
-        if not selected_model or "jev" in selected_model.lower():
+        if not selected_model or "jev" in selected_model.lower() or "laya" in selected_model.lower():
             selected_model = "@cf/cloudflare/clef-flash"
+    elif selected_provider == "vercel":
+        if not selected_model or selected_model in ("laya", "laya-free"):
+            selected_model = "convaiinnovations/laya-free"
+        elif selected_model in ("jev", "vercel-jev"):
+            selected_model = "typesafe-ai/jev"
     elif selected_provider == "openrouter":
-        if not selected_model or "clef" in selected_model.lower():
+        if not selected_model or "clef" in selected_model.lower() or "laya" in selected_model.lower():
             selected_model = "typesafe/jev-1.13"
 
     async def _call_cloudflare_clef(m_tag: str) -> Dict[str, Any]:
@@ -544,6 +563,47 @@ async def classify_single_email(
         data = resp.json()
         return data.get("answers", data)
 
+    async def _call_vercel_ai_gateway(m_name: str) -> Dict[str, Any]:
+        key = vercel_token or VERCEL_AI_GATEWAY_API_KEY
+        if not key:
+            raise ValueError("VERCEL_AI_GATEWAY_API_KEY (or AI_GATEWAY_API_KEY) is required for Vercel AI Gateway")
+        clean_model = m_name
+        if clean_model in ("laya", "laya-free"):
+            clean_model = "convaiinnovations/laya-free"
+
+        headers = {
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json"
+        }
+
+        if clean_model.startswith("typesafe-ai/") or clean_model.startswith("typesafe/"):
+            url = f"{VERCEL_AI_GATEWAY_BASE_URL}/typesafe/v1/systemone"
+            body = {
+                "model": clean_model,
+                "state": state,
+                "questions": QUESTIONS_TAXONOMY
+            }
+        else:
+            # Map noul to boolean for /v1/evaluate
+            mapped_q = {}
+            for qid, qspec in QUESTIONS_TAXONOMY.items():
+                q_copy = dict(qspec)
+                if q_copy.get("type") == "noul":
+                    q_copy["type"] = "boolean"
+                mapped_q[qid] = q_copy
+            url = f"{VERCEL_AI_GATEWAY_BASE_URL}/v1/evaluate"
+            body = {
+                "model": clean_model,
+                "state": state,
+                "questions": mapped_q
+            }
+
+        resp = await http_client.post(url, json=body, headers=headers, timeout=20.0)
+        if resp.status_code != 200:
+            raise RuntimeError(f"Vercel AI Gateway error ({resp.status_code}): {resp.text}")
+        data = resp.json()
+        return data.get("answers", data)
+
     answers: Dict[str, Any] = {}
     used_provider = selected_provider
     used_model = selected_model
@@ -551,23 +611,33 @@ async def classify_single_email(
     try:
         if selected_provider == "cloudflare":
             answers = await _call_cloudflare_clef(selected_model)
+        elif selected_provider == "vercel":
+            answers = await _call_vercel_ai_gateway(selected_model)
         elif selected_provider == "openrouter":
             answers = await _call_openrouter_jev(selected_model)
         elif selected_provider == "auto":
-            if CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID:
-                try:
+            # Auto cascade: Cloudflare Clef -> Vercel AI Gateway (Laya Free / Jev) -> OpenRouter Jev
+            try:
+                if CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID:
                     used_provider = "cloudflare"
                     used_model = "@cf/cloudflare/clef-flash"
                     answers = await _call_cloudflare_clef(used_model)
-                except Exception as cf_err:
-                    logger.warning("Clef failed in auto cascade: %s. Falling back to OpenRouter Jev.", cf_err)
+                else:
+                    raise ValueError("Cloudflare not configured")
+            except Exception as cf_err:
+                logger.warning("Clef failed in auto cascade: %s. Trying Vercel AI Gateway.", cf_err)
+                try:
+                    if VERCEL_AI_GATEWAY_API_KEY:
+                        used_provider = "vercel"
+                        used_model = "convaiinnovations/laya-free"
+                        answers = await _call_vercel_ai_gateway(used_model)
+                    else:
+                        raise ValueError("Vercel AI Gateway not configured")
+                except Exception as vc_err:
+                    logger.warning("Vercel failed in auto cascade: %s. Falling back to OpenRouter Jev.", vc_err)
                     used_provider = "openrouter"
                     used_model = "typesafe/jev-1.13"
                     answers = await _call_openrouter_jev(used_model)
-            else:
-                used_provider = "openrouter"
-                used_model = "typesafe/jev-1.13"
-                answers = await _call_openrouter_jev(used_model)
         else:
             raise ValueError(f"Unknown decision provider: {selected_provider}")
 
@@ -707,24 +777,35 @@ async def categorize_emails(req: CategorizeRequest):
     target_provider = (req.provider or DEFAULT_PROVIDER).lower()
     target_model = req.model or (
         DEFAULT_MODEL if req.provider is None else (
-            "@cf/cloudflare/clef-flash" if target_provider == "cloudflare" else "typesafe/jev-1.13"
+            "@cf/cloudflare/clef-flash" if target_provider == "cloudflare" else (
+                "convaiinnovations/laya-free" if target_provider == "vercel" else "typesafe/jev-1.13"
+            )
         )
     )
 
     if target_provider == "cloudflare" and not (CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID):
         raise HTTPException(
             status_code=500,
-            detail="CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must be configured in environment or cron-system/.env"
+            detail="CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must be configured in environment or .env"
+        )
+    if target_provider == "vercel" and not VERCEL_AI_GATEWAY_API_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="VERCEL_AI_GATEWAY_API_KEY (or AI_GATEWAY_API_KEY) must be configured in environment or .env"
         )
     if target_provider == "openrouter" and not OPENROUTER_API_KEY:
         raise HTTPException(
             status_code=500,
-            detail="OPENROUTER_API_KEY is not configured in environment or cron-system/.env"
+            detail="OPENROUTER_API_KEY is not configured in environment or .env"
         )
-    if target_provider == "auto" and not ((CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID) or OPENROUTER_API_KEY):
+    if target_provider == "auto" and not (
+        (CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID)
+        or VERCEL_AI_GATEWAY_API_KEY
+        or OPENROUTER_API_KEY
+    ):
         raise HTTPException(
             status_code=500,
-            detail="Neither Cloudflare (Clef) nor OpenRouter (Jev) credentials are configured"
+            detail="No System One credentials configured (requires Cloudflare, Vercel AI Gateway, or OpenRouter)"
         )
 
     # 1. Fetch current envelopes to get metadata
@@ -760,7 +841,8 @@ async def categorize_emails(req: CategorizeRequest):
                 model=target_model,
                 provider=target_provider,
                 cloudflare_token=CLOUDFLARE_API_TOKEN,
-                cloudflare_account_id=CLOUDFLARE_ACCOUNT_ID
+                cloudflare_account_id=CLOUDFLARE_ACCOUNT_ID,
+                vercel_token=VERCEL_AI_GATEWAY_API_KEY
             )
 
     async with httpx.AsyncClient(timeout=25.0) as client:

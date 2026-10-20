@@ -586,8 +586,10 @@
           <select id="model-select" class="btn-secondary" style="padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; outline: none; background: var(--bg-card); color: var(--text); border: 1px solid var(--border-bright);" onchange="updateModelLabel()">
             <option value="clef-flash" selected>⚡ Clef-Flash (Cloudflare 9B, ~38ms)</option>
             <option value="clef">🎯 Clef (Cloudflare 27B)</option>
-            <option value="jev">💎 Jev 1.13 (TypeSafe AI)</option>
-            <option value="auto">🔀 Auto (Clef-first cascade)</option>
+            <option value="laya-free">🎁 Laya (Vercel AI Gateway Free Tier)</option>
+            <option value="vercel-jev">▲ Jev (Vercel AI Gateway)</option>
+            <option value="jev">💎 Jev 1.13 (TypeSafe / OpenRouter)</option>
+            <option value="auto">🔀 Auto (Multi-Cloud Cascade)</option>
           </select>
           <button id="btn-categorize" class="btn-primary" onclick="triggerCategorize()">
             <span id="btn-categorize-text">✨ Categorize (Clef AI)</span>
@@ -1086,8 +1088,12 @@
       if (!select || !textSpan) return;
       if (select.value === 'jev') {
         textSpan.textContent = '✨ Categorize (Jev AI)';
+      } else if (select.value === 'laya-free') {
+        textSpan.textContent = '✨ Categorize (Laya Free)';
+      } else if (select.value === 'vercel-jev') {
+        textSpan.textContent = '✨ Categorize (Vercel Jev)';
       } else if (select.value === 'auto') {
-        textSpan.textContent = '✨ Categorize (Auto AI)';
+        textSpan.textContent = '✨ Categorize (Auto Cascade)';
       } else {
         textSpan.textContent = '✨ Categorize (Clef AI)';
       }
@@ -1106,6 +1112,14 @@
         provider = 'cloudflare';
         model = '@cf/cloudflare/clef';
         label = 'Clef 27B';
+      } else if (modelVal === 'laya-free') {
+        provider = 'vercel';
+        model = 'convaiinnovations/laya-free';
+        label = 'Laya Free';
+      } else if (modelVal === 'vercel-jev') {
+        provider = 'vercel';
+        model = 'typesafe-ai/jev';
+        label = 'Vercel Jev';
       } else if (modelVal === 'jev') {
         provider = 'openrouter';
         model = 'typesafe/jev-1.13';

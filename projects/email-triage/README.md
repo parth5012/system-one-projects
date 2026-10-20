@@ -9,8 +9,11 @@
 Traditional LLM classification prompts suffer from latency (1,000–3,000ms), hallucinations, markdown formatting parsing failures, and unpredictable token output costs.
 
 The **Email Triage Engine** replaces generative LLMs with **System One decision models**:
-- **TypeSafe Jev** (via OpenRouter or TypeSafe native endpoint)
-- **Cloudflare Clef** (27B multimodal) and **Clef-Flash** (9B ultra-low latency, ~38ms)
+- **Cloudflare Clef** (`@cf/cloudflare/clef`, 27B multimodal) and **Clef-Flash** (`@cf/cloudflare/clef-flash`, 9B ultra-low latency, ~38ms)
+- **Vercel AI Gateway (Free Tier & Credit)**:
+  - `convaiinnovations/laya-free`: Convai Innovations' dedicated System One evaluation model on Vercel AI Gateway free tier.
+  - `typesafe-ai/jev` (`typesafe-ai/jev-1.14.0`, `typesafe-ai/jev-1.13.0`): TypeSafe Jev via Vercel AI Gateway's TypeSafe-compatible endpoint (`/typesafe/v1/systemone`) and Decision API (`/v1/evaluate`).
+- **OpenRouter / TypeSafe Official**: `typesafe/jev-1.13`
 
 Code owns the workflow and state transitions while the decision model supplies calibrated probabilities for boolean checks, discrete category choice, and continuous urgency scoring.
 
