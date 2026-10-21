@@ -81,13 +81,15 @@ def test_api_categorize_mocked():
     
     with patch("email_triage.fetch_envelopes_from_himalaya", return_value=[MOCK_ENVELOPES[1]]):
         with patch("email_triage.classify_single_email", return_value=mock_classified):
-            res = client.post("/api/email-triage/categorize", json={"email_ids": ["1002"], "force_refresh": True})
-            assert res.status_code == 200
-            data = res.json()
-            assert data["categorized_count"] == 1
-            assert "1002" in data["results"]
-            assert data["results"]["1002"]["category"] == "irrelevant"
-            assert data["results"]["1002"]["is_irrelevant_prob"] == 0.95
+            with patch.object(email_triage, "DEFAULT_PROVIDER", "openrouter"):
+                with patch.object(email_triage, "OPENROUTER_API_KEY", "fake-key"):
+                    res = client.post("/api/email-triage/categorize", json={"email_ids": ["1002"], "force_refresh": True})
+                    assert res.status_code == 200
+                    data = res.json()
+                    assert data["categorized_count"] == 1
+                    assert "1002" in data["results"]
+                    assert data["results"]["1002"]["category"] == "irrelevant"
+                    assert data["results"]["1002"]["is_irrelevant_prob"] == 0.95
 
 def test_api_archive_mocked():
     """Verify POST /api/email-triage/archive calls Himalaya message move."""
@@ -204,24 +206,26 @@ def test_api_categorize_clef_provider_selection():
 
     with patch("email_triage.fetch_envelopes_from_himalaya", return_value=[MOCK_ENVELOPES[1]]):
         with patch("email_triage.classify_single_email", return_value=mock_classified) as mock_classify:
-            res = client.post(
-                "/api/email-triage/categorize",
-                json={
-                    "email_ids": ["1002"],
-                    "force_refresh": True,
-                    "provider": "cloudflare",
-                    "model": "@cf/cloudflare/clef-flash"
-                }
-            )
-            assert res.status_code == 200
-            data = res.json()
-            assert data["categorized_count"] == 1
-            assert "1002" in data["results"]
-            assert data["results"]["1002"]["category"] == "personal"
-            mock_classify.assert_called_once()
-            _, kwargs = mock_classify.call_args
-            assert kwargs["provider"] == "cloudflare"
-            assert kwargs["model"] == "@cf/cloudflare/clef-flash"
+            with patch.object(email_triage, "CLOUDFLARE_API_TOKEN", "fake-token"):
+                with patch.object(email_triage, "CLOUDFLARE_ACCOUNT_ID", "fake-account"):
+                    res = client.post(
+                        "/api/email-triage/categorize",
+                        json={
+                            "email_ids": ["1002"],
+                            "force_refresh": True,
+                            "provider": "cloudflare",
+                            "model": "@cf/cloudflare/clef-flash"
+                        }
+                    )
+                    assert res.status_code == 200
+                    data = res.json()
+                    assert data["categorized_count"] == 1
+                    assert "1002" in data["results"]
+                    assert data["results"]["1002"]["category"] == "personal"
+                    mock_classify.assert_called_once()
+                    _, kwargs = mock_classify.call_args
+                    assert kwargs["provider"] == "cloudflare"
+                    assert kwargs["model"] == "@cf/cloudflare/clef-flash"
 
 @pytest.mark.asyncio
 async def test_classify_vercel_laya_free_format():
