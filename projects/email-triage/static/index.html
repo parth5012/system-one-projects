@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Email Triage Engine | TypeSafe System One</title>
+  <title>Email Triage Engine | TypeSafe Jev System One</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -33,95 +33,542 @@
       color: var(--text);
       font-family: var(--font-sans);
       min-height: 100vh;
-      padding: 1.5rem 2rem 4rem;
       line-height: 1.5;
+      display: flex;
+      flex-direction: column;
     }
 
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    /* Header */
-    .header {
+    /* Top Bar (Zone 1) */
+    .top-bar {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1.5rem;
-      margin-bottom: 1.75rem;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 1rem;
       flex-wrap: wrap;
-      gap: 1.25rem;
     }
-
-    .brand-title {
+    .top-bar-left {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      color: var(--text);
     }
     .brand-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
       background: linear-gradient(135deg, #38bdf8, #6366f1);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.25rem;
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      font-size: 1.1rem;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.35);
     }
-    .brand-text h1 {
+    .brand-name {
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .brand-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--accent-blue);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    /* Workspace Tabs */
+    .workspace-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 3px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+    }
+    .ws-tab {
+      padding: 0.35rem 0.75rem;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border: 1px solid transparent;
+      background: transparent;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+    .ws-tab:hover:not(.disabled) {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .ws-tab.active {
+      background: var(--bg-card);
+      color: #fff;
+      border-color: var(--border-bright);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    .ws-tab.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .ws-tab-badge {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent-blue);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 1px 5px;
+      border-radius: 10px;
+    }
+
+    /* Top Bar Right: Spend & Cost */
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .spend-readout {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .spend-readout strong {
+      color: var(--text);
+    }
+
+    /* Buttons */
+    button {
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(79, 70, 229, 0.35);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #1d4ed8, #4338ca);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--bg-card);
+      border-color: var(--border-bright);
+      color: var(--text);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-blue);
+    }
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.4);
+      color: #fca5a5;
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(244, 63, 94, 0.25);
+      border-color: var(--accent-rose);
+      color: #fff;
+    }
+    .btn-icon {
+      padding: 0.35rem 0.6rem;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-bright);
+      color: var(--text-muted);
+    }
+    .btn-icon:hover {
+      color: #fff;
+      border-color: var(--accent-blue);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Layout Container */
+    .dashboard-shell {
+      display: flex;
+      flex: 1;
+      min-height: calc(100vh - 57px);
+    }
+
+    /* Left Question Rail (Zone 2) */
+    .question-rail {
+      width: 270px;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      padding: 1.25rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      flex-shrink: 0;
+    }
+    .rail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .rail-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .btn-rail-new {
+      padding: 0.25rem 0.55rem;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-blue);
+    }
+    .btn-rail-new:hover {
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    .rail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .rail-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.15s ease;
+    }
+    .rail-item:hover {
+      border-color: var(--border-bright);
+    }
+    .rail-item.disabled {
+      opacity: 0.5;
+    }
+    .rail-checkbox {
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+    .rail-item-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .rail-item-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rail-item-type {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      color: var(--accent-indigo);
+    }
+    .rail-item-edit {
+      cursor: pointer;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 2px 4px;
+      border-radius: 4px;
+      background: transparent;
+      border: none;
+    }
+    .rail-item-edit:hover {
+      color: var(--accent-blue);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Rail New Question Form */
+    .rail-new-form {
+      background: var(--bg-card);
+      border: 1px solid var(--accent-blue);
+      border-radius: 8px;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .rail-input, .sample-select {
+      background: var(--bg-base);
+      border: 1px solid var(--border-bright);
+      color: var(--text);
+      font-size: 0.8rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      outline: none;
+      font-family: var(--font-sans);
+    }
+    .rail-input:focus, .sample-select:focus {
+      border-color: var(--accent-blue);
+    }
+
+    /* Main Content Area (Center Zone 3 & 4) */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      padding: 1.5rem 2rem 4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Screen Header (Recipe Header) */
+    .screen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .screen-header-left {
+      max-width: 780px;
+    }
+    .screen-header-left h1 {
       font-size: 1.6rem;
       font-weight: 700;
       letter-spacing: -0.02em;
       color: #fff;
-    }
-    .brand-text p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    /* Stats bar */
-    .stats-grid {
       display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .recipe-subtitle {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      line-height: 1.55;
+    }
+    .recipe-subtitle strong {
+      color: #e2e8f0;
+    }
+    .screen-header-right {
+      display: flex;
+      align-items: center;
       gap: 0.75rem;
       flex-wrap: wrap;
     }
-    .stat-card {
+    .header-pill {
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 0.6rem 1.1rem;
-      min-width: 120px;
-      display: flex;
-      flex-direction: column;
-    }
-    .stat-label {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
       color: var(--text-muted);
-      font-weight: 600;
     }
-    .stat-val {
-      font-size: 1.35rem;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      margin-top: 2px;
-    }
-    .stat-val.rose { color: var(--accent-rose); }
-    .stat-val.emerald { color: var(--accent-emerald); }
-    .stat-val.amber { color: var(--accent-amber); }
-    .stat-val.blue { color: var(--accent-blue); }
 
-    /* Action & Controls Bar */
-    .controls-panel {
+    /* Run Bar (Zone 3 Run Bar) */
+    .run-bar {
       background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 1.5rem;
+      padding: 0.9rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    .run-bar-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .status-sentence {
+      font-size: 0.9rem;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+    }
+    .run-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .run-receipt {
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+      color: var(--accent-emerald);
+      padding-top: 0.45rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: none;
+    }
+    .run-receipt a {
+      color: var(--accent-blue);
+      text-decoration: underline;
+      cursor: pointer;
+      margin-left: 0.5rem;
+    }
+
+    /* Card Grid (Zone 3 Distribution Cards) */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 1.25rem;
+    }
+    .distribution-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      transition: all 0.15s ease;
+    }
+    .distribution-card:hover {
+      border-color: var(--border-bright);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 0.5rem;
+    }
+    .card-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .card-stat {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+    .bucket-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .bucket-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+      padding: 0.35rem 0.5rem;
+      border: none;
+      border-radius: 6px;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      user-select: none;
+    }
+    .bucket-row:focus-visible {
+      outline: 1px solid var(--accent-blue);
+      outline-offset: 1px;
+    }
+    .bucket-row:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .bucket-row.active {
+      background: rgba(56, 189, 248, 0.12);
+      outline: 1px solid var(--accent-blue);
+    }
+    .bucket-label {
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      width: 110px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 0;
+    }
+    .bar-track {
+      display: block;
+      flex: 1;
+      height: 9px;
+      background: #1e293b;
+      border-radius: 9999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .bar-fill {
+      display: block;
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.3s ease;
+      background: linear-gradient(90deg, #38bdf8, #6366f1);
+    }
+    .bar-fill.rose {
+      background: linear-gradient(90deg, #f43f5e, #fb7185);
+    }
+    .bar-fill.emerald {
+      background: linear-gradient(90deg, #10b981, #34d399);
+    }
+    .bucket-count {
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--text);
+      font-weight: 600;
+      min-width: 32px;
+      text-align: right;
+    }
+    .show-more-link {
+      font-size: 0.75rem;
+      color: var(--accent-blue);
+      cursor: pointer;
+      text-decoration: underline;
+      padding-left: 0.5rem;
+      display: inline-block;
+      margin-top: 0.25rem;
+    }
+
+    /* Mid Controls & Category Tabs */
+    .middle-panel {
       display: flex;
       flex-direction: column;
       gap: 1rem;
@@ -133,67 +580,56 @@
       flex-wrap: wrap;
       gap: 1rem;
     }
-    .btn-group {
+    .tabs-bar {
       display: flex;
-      gap: 0.6rem;
-      align-items: center;
-      flex-wrap: wrap;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
     }
-    button {
-      cursor: pointer;
-      font-family: var(--font-sans);
-      font-size: 0.875rem;
-      font-weight: 600;
-      padding: 0.55rem 1.1rem;
-      border-radius: 8px;
-      border: 1px solid transparent;
-      transition: all 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, #2563eb, #4f46e5);
-      color: #fff;
-      box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
-    }
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #1d4ed8, #4338ca);
-      transform: translateY(-1px);
-    }
-    .btn-danger {
-      background: rgba(244, 63, 94, 0.15);
-      border-color: rgba(244, 63, 94, 0.4);
-      color: #fca5a5;
-    }
-    .btn-danger:hover {
-      background: rgba(244, 63, 94, 0.25);
-      border-color: var(--accent-rose);
-      color: #fff;
-    }
-    .btn-secondary {
+    .tab-pill {
       background: var(--bg-card);
-      border-color: var(--border-bright);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .tab-pill:hover {
       color: var(--text);
+      border-color: var(--border-bright);
     }
-    .btn-secondary:hover {
-      background: var(--bg-card-hover);
+    .tab-pill.active {
+      background: #1e293b;
+      color: #fff;
+      border-color: var(--accent-blue);
+      font-weight: 600;
     }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none !important;
+    .tab-count {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
     }
 
-    /* Threshold and Search Row */
+    /* Threshold Slider Row */
     .filter-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 1.5rem;
       flex-wrap: wrap;
-      padding-top: 0.75rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 0.75rem 1rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
     }
     .slider-box {
       display: flex;
@@ -205,6 +641,7 @@
     .slider-box input[type="range"] {
       width: 140px;
       accent-color: var(--accent-rose);
+      cursor: pointer;
     }
     .slider-val {
       font-family: var(--font-mono);
@@ -212,27 +649,13 @@
       color: var(--accent-rose);
       min-width: 40px;
     }
-    .search-input {
-      background: var(--bg-card);
-      border: 1px solid var(--border-bright);
-      border-radius: 8px;
-      color: var(--text);
-      padding: 0.5rem 0.85rem;
-      font-size: 0.85rem;
-      min-width: 260px;
-      outline: none;
-    }
-    .search-input:focus {
-      border-color: var(--accent-blue);
-    }
 
     /* Allowlist Section */
     .allowlist-panel {
       background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 0.9rem 1.25rem;
-      margin-bottom: 1.25rem;
+      padding: 0.85rem 1.25rem;
     }
     .allowlist-header {
       display: flex;
@@ -291,53 +714,69 @@
       color: #fff;
     }
 
-    /* Category Filter Tabs */
-    .tabs-bar {
+    /* Item Table (Zone 4) */
+    .table-section {
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
-      overflow-x: auto;
-      padding-bottom: 0.25rem;
+      flex-direction: column;
+      gap: 0.75rem;
     }
-    .tab-pill {
+    .table-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .search-input {
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 0.45rem 1rem;
-      font-size: 0.82rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.15s ease;
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.5rem 0.85rem;
+      font-size: 0.85rem;
+      min-width: 270px;
+      outline: none;
+    }
+    .search-input:focus {
+      border-color: var(--accent-blue);
+    }
+    .table-tools-right {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 1rem;
     }
-    .tab-pill:hover {
-      color: var(--text);
-      border-color: var(--border-bright);
-    }
-    .tab-pill.active {
-      background: #1e293b;
-      color: #fff;
-      border-color: var(--accent-blue);
-      font-weight: 600;
-    }
-    .tab-count {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 1px 6px;
-      border-radius: 10px;
-      font-size: 0.72rem;
+    .table-item-count {
+      font-size: 0.82rem;
+      color: var(--text-muted);
       font-family: var(--font-mono);
     }
+    .active-filter-chips {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .drill-chip {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      font-size: 0.75rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .drill-chip-del {
+      cursor: pointer;
+      font-weight: bold;
+    }
 
-    /* Email Table List */
     .table-container {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      overflow: hidden;
+      overflow-x: auto;
     }
     table {
       width: 100%;
@@ -355,11 +794,12 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-muted);
+      white-space: nowrap;
     }
     td {
-      padding: 0.9rem 1rem;
+      padding: 0.85rem 1rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       vertical-align: middle;
     }
     tr.email-row:hover {
@@ -370,9 +810,8 @@
       text-decoration: line-through;
     }
     tr.email-row.irrelevant-highlight {
-      background-color: rgba(244, 63, 94, 0.03);
+      background-color: rgba(244, 63, 94, 0.04);
     }
-
     .unread-dot {
       display: inline-block;
       width: 8px;
@@ -392,6 +831,7 @@
       padding: 0.22rem 0.55rem;
       border-radius: 6px;
       text-transform: capitalize;
+      white-space: nowrap;
     }
     .badge-work { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
     .badge-freelance { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); }
@@ -400,6 +840,7 @@
     .badge-transactional { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
     .badge-irrelevant { background: rgba(244, 63, 94, 0.15); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.3); }
     .badge-uncat { background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3); }
+    .badge-allowlist { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
 
     .confidence-meter {
       display: inline-flex;
@@ -421,20 +862,7 @@
       border-radius: 3px;
     }
 
-    .btn-icon {
-      padding: 0.35rem 0.65rem;
-      font-size: 0.78rem;
-      border-radius: 6px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-bright);
-      color: var(--text-muted);
-    }
-    .btn-icon:hover {
-      color: #fff;
-      border-color: var(--accent-blue);
-    }
-
-    /* Modal */
+    /* Modals */
     .modal-backdrop {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -444,7 +872,7 @@
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      padding: 1rem;
+      padding: 1.5rem;
     }
     .modal-backdrop.open { display: flex; }
     .modal-box {
@@ -458,6 +886,9 @@
       flex-direction: column;
       box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
     }
+    .modal-box.modal-lg {
+      max-width: 960px;
+    }
     .modal-header {
       padding: 1.25rem 1.5rem;
       border-bottom: 1px solid var(--border);
@@ -469,12 +900,12 @@
     .modal-body {
       padding: 1.5rem;
       overflow-y: auto;
-      font-family: var(--font-sans);
       font-size: 0.9rem;
       line-height: 1.6;
       color: #e2e8f0;
-      white-space: pre-wrap;
-      word-break: break-word;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
     }
     .modal-footer {
       padding: 1rem 1.5rem;
@@ -485,49 +916,80 @@
       background: rgba(0, 0, 0, 0.2);
     }
 
-    /* Suggested Extensions Accordion */
-    .suggestions-section {
-      margin-top: 2.5rem;
-      background: linear-gradient(180deg, #0d1629 0%, #080d19 100%);
-      border: 1px solid var(--border-bright);
-      border-radius: 12px;
-      padding: 1.5rem;
-    }
-    .suggestions-header {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      margin-bottom: 1rem;
-    }
-    .suggestions-header h3 {
-      font-size: 1.1rem;
+    /* Modal Tables */
+    .cost-table-title {
+      font-size: 1rem;
       font-weight: 700;
       color: #fff;
     }
-    .suggestions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-    }
-    .suggestion-item {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1rem;
-    }
-    .suggestion-item h4 {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--accent-blue);
-      margin-bottom: 0.35rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .suggestion-item p {
+    .cost-table-sub {
       font-size: 0.8rem;
       color: var(--text-muted);
-      line-height: 1.45;
+      margin-top: 2px;
+      margin-bottom: 0.75rem;
+    }
+    .cost-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .cost-table th {
+      background: #111a2e;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .cost-table td {
+      padding: 0.65rem 0.85rem;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .cost-footnote {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-top: 0.5rem;
+    }
+
+    /* Feedback Pill */
+    .feedback-pill {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 900;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 9999px;
+      padding: 0.35rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+    .feedback-btn {
+      background: transparent;
+      border: none;
+      padding: 0.2rem 0.35rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .feedback-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .feedback-btn.active {
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.15);
+    }
+    .feedback-sep {
+      color: var(--border-bright);
+      font-size: 0.75rem;
+      user-select: none;
     }
 
     /* Spinner */
@@ -541,196 +1003,408 @@
       display: inline-block;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Suggested Extensions Accordion */
+    .suggestions-section {
+      margin-top: 1.5rem;
+      background: linear-gradient(180deg, #0d1629 0%, #080d19 100%);
+      border: 1px solid var(--border-bright);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+    }
+    .suggestions-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.85rem;
+    }
+    .suggestions-header h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .suggestions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .suggestion-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+    }
+    .suggestion-item h4 {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--accent-blue);
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .suggestion-item p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <div class="brand-title">
+
+  <!-- Top Bar (Zone 1) -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <a href="/email-triage" class="brand-block">
         <div class="brand-icon">⚡</div>
-        <div class="brand-text">
+        <span class="brand-name">Email Triage Engine</span>
+        <span class="brand-badge">TypeSafe Jev System One</span>
+      </a>
+
+      <!-- Workspace Tabs -->
+      <nav class="workspace-tabs">
+        <a href="#email" class="ws-tab active">
+          <span>📬 Email</span>
+          <span class="ws-tab-badge" id="top-email-count">0</span>
+        </a>
+        <a href="#yt" class="ws-tab disabled" title="YouTube Comments (Coming Soon)">
+          <span>▶️ YouTube comments</span>
+        </a>
+        <a href="#x" class="ws-tab disabled" title="X Feed (Coming Soon)">
+          <span>🐦 X feed</span>
+        </a>
+        <a href="#support" class="ws-tab disabled" title="Customer Support (Coming Soon)">
+          <span>🎧 Customer support</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="top-bar-right">
+      <div class="spend-readout">
+        <span>Spent so far:</span>
+        <strong id="spend-readout">$0.00 on Jev, $0.00 on other models</strong>
+      </div>
+      <button class="btn-secondary" onclick="openCostModal()">
+        <span>Compare cost</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Dashboard Shell -->
+  <div class="dashboard-shell">
+    
+    <!-- Left Question Rail (Zone 2) -->
+    <aside class="question-rail" id="question-rail">
+      <div class="rail-header">
+        <span class="rail-title">Questions &amp; Decisions</span>
+        <button class="btn-rail-new" onclick="toggleNewQuestionForm()">+ New</button>
+      </div>
+
+      <!-- Add Local Question Form -->
+      <form id="new-question-form" class="rail-new-form" style="display:none;" onsubmit="handleNewLocalQuestion(event)">
+        <span style="font-size:0.75rem; font-weight:600; color:var(--accent-blue);">Add Local Question</span>
+        <input type="text" id="nq-title" class="rail-input" placeholder="e.g. Needs Followup" required>
+        <select id="nq-type" class="rail-input">
+          <option value="noul">Yes / No (noul)</option>
+          <option value="choice">Category (choice)</option>
+          <option value="score">Score (score)</option>
+        </select>
+        <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
+          <button type="button" class="btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="toggleNewQuestionForm()">Cancel</button>
+          <button type="submit" class="btn-primary" style="padding:0.25rem 0.5rem; font-size:0.75rem;">Add</button>
+        </div>
+      </form>
+
+      <!-- Question List Items -->
+      <div class="rail-list" id="rail-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </aside>
+
+    <!-- Center Content (Zone 3 & Zone 4) -->
+    <main class="main-content">
+      
+      <!-- Recipe Header -->
+      <section class="screen-header">
+        <div class="screen-header-left">
           <h1>Email Triage Engine</h1>
-          <p>Autonomous inbox sorting powered by Cloudflare Clef &amp; TypeSafe Jev System One decision models &amp; Himalaya IMAP</p>
+          <p class="recipe-subtitle">
+            Your latest inbound emails, parsed via Himalaya IMAP and evaluated against operational decision criteria.<br>
+            <strong>TypeSafe Jev System One</strong> classifies relevance, urgency, action items, and categories so you can archive noise safely.
+          </p>
         </div>
-      </div>
-
-      <!-- Quick Stats -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-label">Total Loaded</span>
-          <span class="stat-val" id="stat-total">--</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Irrelevant</span>
-          <span class="stat-val rose" id="stat-irrel">--</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Action Req.</span>
-          <span class="stat-val amber" id="stat-action">--</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Uncategorized</span>
-          <span class="stat-val blue" id="stat-uncat">--</span>
-        </div>
-      </div>
-    </header>
-
-    <!-- Controls Panel -->
-    <section class="controls-panel">
-      <div class="action-row">
-        <div class="btn-group" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-          <button id="btn-fetch" class="btn-secondary" onclick="loadEmails(true)">
-            <span>🔄 Fetch 50 Recent</span>
-          </button>
-          <select id="model-select" class="btn-secondary" style="padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; outline: none; background: var(--bg-card); color: var(--text); border: 1px solid var(--border-bright);" onchange="updateModelLabel()">
-            <option value="clef-flash" selected>⚡ Clef-Flash (Cloudflare 9B, ~38ms)</option>
-            <option value="clef">🎯 Clef (Cloudflare 27B)</option>
-            <option value="laya-free">🎁 Laya (Vercel AI Gateway Free Tier)</option>
-            <option value="vercel-jev">▲ Jev (Vercel AI Gateway)</option>
-            <option value="jev">💎 Jev 1.13 (TypeSafe / OpenRouter)</option>
-            <option value="auto">🔀 Auto (Multi-Cloud Cascade)</option>
+        <div class="screen-header-right">
+          <span class="header-pill" id="header-sample-size">50 emails</span>
+          <span class="header-pill" id="header-freshness">Synced today at --:--</span>
+          <select id="sample-count-select" class="sample-select" onchange="changeSampleSize(this.value)">
+            <option value="25">25 emails</option>
+            <option value="50" selected>50 emails</option>
+            <option value="100">100 emails</option>
           </select>
-          <button id="btn-categorize" class="btn-primary" onclick="triggerCategorize()">
-            <span id="btn-categorize-text">✨ Categorize (Clef AI)</span>
+          <button id="btn-fetch" class="btn-secondary" onclick="loadEmails(true)">
+            <span>🔄 Refresh</span>
           </button>
+        </div>
+      </section>
+
+      <!-- Run Bar (Zone 3 Run Bar) -->
+      <section class="run-bar" id="run-bar">
+        <div class="run-bar-main">
+          <div class="status-sentence" id="status-sentence">
+            All caught up. Select any result below to filter the emails.
+          </div>
+          <div class="run-controls">
+            <select id="model-select" class="sample-select" onchange="updateModelLabel()">
+              <option value="clef-flash" selected>⚡ Clef-Flash (Cloudflare 9B, ~38ms)</option>
+              <option value="clef">🎯 Clef (Cloudflare 27B)</option>
+              <option value="laya-free">🎁 Laya (Vercel AI Gateway Free Tier)</option>
+              <option value="vercel-jev">▲ Jev (Vercel AI Gateway)</option>
+              <option value="jev">💎 Jev 1.13 (TypeSafe / OpenRouter)</option>
+              <option value="auto">🔀 Auto (Multi-Cloud Cascade)</option>
+            </select>
+            <select id="scope-select" class="sample-select">
+              <option value="unsorted" selected>Anything not sorted yet</option>
+              <option value="all">Everything</option>
+            </select>
+            <button id="btn-run" class="btn-primary" onclick="triggerRun()">
+              <span>▶ Run</span>
+            </button>
+            <!-- Backward-compatibility button reference -->
+            <button id="btn-categorize" style="display:none;" onclick="triggerRun()">
+              <span id="btn-categorize-text">✨ Categorize (Clef AI)</span>
+            </button>
+          </div>
+        </div>
+        <div class="run-receipt" id="run-receipt"></div>
+      </section>
+
+      <!-- Distribution Card Grid (Zone 3) -->
+      <section class="card-grid" id="card-grid">
+        <div style="grid-column: 1 / -1; padding: 2.5rem; text-align: center; color: var(--text-muted); background: var(--bg-card); border: 1px dashed var(--border-bright); border-radius: 12px;">
+          Loading distribution cards...
+        </div>
+      </section>
+
+      <!-- Filter Controls & Allowlist Accordion -->
+      <section class="middle-panel">
+        <div class="action-row">
+          <!-- Category Tabs -->
+          <div class="tabs-bar" id="tabs-bar">
+            <div class="tab-pill active" data-tab="all" onclick="setTab('all')">
+              All <span class="tab-count" id="tab-count-all">0</span>
+            </div>
+            <div class="tab-pill" data-tab="irrelevant" onclick="setTab('irrelevant')">
+              Irrelevant <span class="tab-count" id="tab-count-irrel">0</span>
+            </div>
+            <div class="tab-pill" data-tab="allowlisted" onclick="setTab('allowlisted')">
+              🛡️ Allowlisted <span class="tab-count" id="tab-count-allowlisted">0</span>
+            </div>
+            <div class="tab-pill" data-tab="work" onclick="setTab('work')">
+              Work &amp; GitHub <span class="tab-count" id="tab-count-work">0</span>
+            </div>
+            <div class="tab-pill" data-tab="freelance" onclick="setTab('freelance')">
+              Freelance <span class="tab-count" id="tab-count-freelance">0</span>
+            </div>
+            <div class="tab-pill" data-tab="action" onclick="setTab('action')">
+              Action Required <span class="tab-count" id="tab-count-action">0</span>
+            </div>
+            <div class="tab-pill" data-tab="newsletter" onclick="setTab('newsletter')">
+              Newsletters <span class="tab-count" id="tab-count-newsletter">0</span>
+            </div>
+            <div class="tab-pill" data-tab="transactional" onclick="setTab('transactional')">
+              Transactional <span class="tab-count" id="tab-count-transactional">0</span>
+            </div>
+          </div>
+
           <button id="btn-archive-irrel" class="btn-danger" onclick="archiveIrrelevant()">
             <span>🗑️ Archive Irrelevant (<span id="archive-count">0</span>)</span>
           </button>
         </div>
-        <div id="status-indicator" style="font-size:0.85rem; color:var(--text-muted); font-family:var(--font-mono);">
-          Ready
-        </div>
-      </div>
 
-      <div class="filter-row">
         <!-- Irrelevance Threshold Slider -->
-        <div class="slider-box">
-          <label for="thresh-slider">Irrelevance Cutoff:</label>
-          <input type="range" id="thresh-slider" min="50" max="95" value="70" step="5" oninput="updateThreshold(this.value)">
-          <span class="slider-val" id="thresh-val">70%</span>
+        <div class="filter-row">
+          <div class="slider-box">
+            <label for="thresh-slider">Irrelevance Cutoff:</label>
+            <input type="range" id="thresh-slider" min="50" max="95" value="70" step="5" oninput="updateThreshold(this.value)">
+            <span class="slider-val" id="thresh-val">70%</span>
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-muted); font-family:var(--font-mono);">
+            Total: <span id="stat-total" style="color:#fff;">0</span> | 
+            Irrelevant: <span id="stat-irrel" style="color:var(--accent-rose);">0</span> | 
+            Action: <span id="stat-action" style="color:var(--accent-amber);">0</span> | 
+            Uncat: <span id="stat-uncat" style="color:var(--accent-blue);">0</span>
+          </div>
         </div>
 
-        <!-- Search Input -->
-        <input type="text" id="search-input" class="search-input" placeholder="Search subject, sender, tag..." oninput="renderTable()">
-      </div>
-    </section>
+        <!-- Allowlist Panel (Feature 4) -->
+        <section class="allowlist-panel" id="allowlist-panel">
+          <div class="allowlist-header" onclick="toggleAllowlistDrawer()">
+            <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+              <span style="font-size: 1.15rem;">🛡️</span>
+              <h3 style="font-size: 0.92rem; font-weight: 600; color: #fff;">
+                Bypass Allowlist (<span id="allowlist-count">0</span> rules)
+              </h3>
+              <span style="font-size: 0.78rem; color: var(--text-muted);">
+                Senders matching these patterns permanently bypass irrelevance marking
+              </span>
+            </div>
+            <button class="btn-icon" id="allowlist-toggle-btn" style="pointer-events: none;">▼ Manage Rules</button>
+          </div>
 
-    <!-- Allowlist Management Section (Feature 4) -->
-    <section class="allowlist-panel" id="allowlist-panel">
-      <div class="allowlist-header" onclick="toggleAllowlistDrawer()">
-        <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
-          <span style="font-size: 1.15rem;">🛡️</span>
-          <h3 style="font-size: 0.95rem; font-weight: 600; color: #fff;">
-            Bypass Allowlist (<span id="allowlist-count">0</span> rules)
-          </h3>
-          <span style="font-size: 0.78rem; color: var(--text-muted);">
-            Senders matching these patterns permanently bypass irrelevance marking
-          </span>
-        </div>
-        <button class="btn-icon" id="allowlist-toggle-btn" style="pointer-events: none;">▼ Manage Rules</button>
-      </div>
+          <div class="allowlist-content" id="allowlist-content" style="display: none;">
+            <!-- Add Rule Form -->
+            <form class="allowlist-form" onsubmit="handleAllowlistSubmit(event)">
+              <input type="text" id="al-pattern" class="search-input" placeholder="Domain or sender (e.g. flyrank.ai, prof@college.edu)" required style="flex: 1; min-width: 250px;">
+              <input type="text" id="al-note" class="search-input" placeholder="Note / Tag (e.g. Work, College, Lead)" style="width: 190px;">
+              <button type="submit" class="btn-primary" style="padding: 0.5rem 1rem;">
+                <span>➕ Add Pattern</span>
+              </button>
+            </form>
 
-      <div class="allowlist-content" id="allowlist-content" style="display: none;">
-        <!-- Add Rule Form -->
-        <form class="allowlist-form" onsubmit="handleAllowlistSubmit(event)">
-          <input type="text" id="al-pattern" class="search-input" placeholder="Domain or sender (e.g. flyrank.ai, prof@college.edu)" required style="flex: 1; min-width: 250px;">
-          <input type="text" id="al-note" class="search-input" placeholder="Note / Tag (e.g. Work, College, Lead)" style="width: 190px;">
-          <button type="submit" class="btn-primary" style="padding: 0.5rem 1rem;">
-            <span>➕ Add Pattern</span>
-          </button>
-        </form>
+            <!-- Active Rules Chips -->
+            <div class="allowlist-chips" id="allowlist-chips">
+              Loading allowlist rules...
+            </div>
+          </div>
+        </section>
+      </section>
 
-        <!-- Active Rules Chips -->
-        <div class="allowlist-chips" id="allowlist-chips">
-          Loading allowlist rules...
+      <!-- Item Table Section (Zone 4) -->
+      <section class="table-section">
+        <div class="table-header-bar">
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            <input type="text" id="search-input" class="search-input" placeholder="Search subject, sender, tag..." oninput="renderTable()">
+            <div class="active-filter-chips" id="active-filter-chips"></div>
+          </div>
+          <div class="table-tools-right">
+            <span class="table-item-count" id="table-item-count">Showing 0 emails</span>
+            <button class="btn-secondary" onclick="exportTableCsv()">
+              <span>📥 Export</span>
+            </button>
+          </div>
         </div>
-      </div>
-    </section>
 
-    <!-- Category Tabs -->
-    <div class="tabs-bar" id="tabs-bar">
-      <div class="tab-pill active" data-tab="all" onclick="setTab('all')">
-        All <span class="tab-count" id="tab-count-all">0</span>
-      </div>
-      <div class="tab-pill" data-tab="irrelevant" onclick="setTab('irrelevant')">
-        Irrelevant <span class="tab-count" id="tab-count-irrel">0</span>
-      </div>
-      <div class="tab-pill" data-tab="allowlisted" onclick="setTab('allowlisted')">
-        🛡️ Allowlisted <span class="tab-count" id="tab-count-allowlisted">0</span>
-      </div>
-      <div class="tab-pill" data-tab="work" onclick="setTab('work')">
-        Work &amp; GitHub <span class="tab-count" id="tab-count-work">0</span>
-      </div>
-      <div class="tab-pill" data-tab="freelance" onclick="setTab('freelance')">
-        Freelance <span class="tab-count" id="tab-count-freelance">0</span>
-      </div>
-      <div class="tab-pill" data-tab="action" onclick="setTab('action')">
-        Action Required <span class="tab-count" id="tab-count-action">0</span>
-      </div>
-      <div class="tab-pill" data-tab="newsletter" onclick="setTab('newsletter')">
-        Newsletters <span class="tab-count" id="tab-count-newsletter">0</span>
-      </div>
-      <div class="tab-pill" data-tab="transactional" onclick="setTab('transactional')">
-        Transactional <span class="tab-count" id="tab-count-transactional">0</span>
-      </div>
-    </div>
+        <div class="table-container" id="item-table-container">
+          <table id="item-table">
+            <thead>
+              <tr>
+                <th style="width: 36px; text-align: center;">
+                  <input type="checkbox" id="select-all" onclick="toggleSelectAll(this.checked)">
+                </th>
+                <th style="width: 24px;"></th>
+                <th style="width: 200px;">Sender</th>
+                <th>Subject</th>
+                <th style="width: 140px;">Category</th>
+                <th style="width: 140px;">Irrelevance</th>
+                <th style="width: 90px;">Urgency</th>
+                <th style="width: 120px;">Action Req.</th>
+                <th style="width: 130px; text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="email-tbody">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                  Loading recent emails...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-    <!-- Table Container -->
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 40px; text-align: center;">
-              <input type="checkbox" id="select-all" onclick="toggleSelectAll(this.checked)">
-            </th>
-            <th style="width: 30px;"></th>
-            <th style="width: 220px;">Sender</th>
-            <th>Subject</th>
-            <th style="width: 140px;">Category</th>
-            <th style="width: 150px;">Irrelevance</th>
-            <th style="width: 90px;">Urgency</th>
-            <th style="width: 140px; text-align: right;">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="email-tbody">
-          <tr>
-            <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
-              Loading recent emails...
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <!-- Suggested Extensions Section -->
+      <section class="suggestions-section">
+        <div class="suggestions-header">
+          <span>💡</span>
+          <h3>Suggested Next-Step Extensions for Your AI-OS</h3>
+        </div>
+        <div class="suggestions-grid">
+          <div class="suggestion-item">
+            <h4>🤖 One-Click Agent Delegation</h4>
+            <p>Directly route actionable client leads or work tickets to <code>@assistant</code> to draft response emails or <code>@developer</code> for GitHub review follow-ups.</p>
+          </div>
+          <div class="suggestion-item">
+            <h4>⏱️ Automated Cron Sweeps</h4>
+            <p>Schedule an automated background sweep in <code>cron_engine.py</code> every 4 hours to auto-archive noise scoring &gt;90% irrelevance.</p>
+          </div>
+          <div class="suggestion-item">
+            <h4>🔔 Slack Channel Digest</h4>
+            <p>Send an instant morning and evening triage summary to your Slack home channel showing only emails tagged "Action Required" or "Freelance".</p>
+          </div>
+          <div class="suggestion-item">
+            <h4>🛡️ Smart Domain Allowlist</h4>
+            <p>Lock trusted domains (e.g. <code>flyrank.ai</code>, college administration, specific clients) to always bypass archival regardless of score.</p>
+          </div>
+        </div>
+      </section>
 
-    <!-- Suggested Extensions Section -->
-    <section class="suggestions-section">
-      <div class="suggestions-header">
-        <span>💡</span>
-        <h3>Suggested Next-Step Extensions for Your AI-OS</h3>
-      </div>
-      <div class="suggestions-grid">
-        <div class="suggestion-item">
-          <h4>🤖 One-Click Agent Delegation</h4>
-          <p>Directly route actionable client leads or work tickets to <code>@assistant</code> to draft response emails or <code>@developer</code> for GitHub review follow-ups.</p>
-        </div>
-        <div class="suggestion-item">
-          <h4>⏱️ Automated Cron Sweeps</h4>
-          <p>Schedule an automated background sweep in <code>cron_engine.py</code> every 4 hours to auto-archive noise scoring &gt;90% irrelevance.</p>
-        </div>
-        <div class="suggestion-item">
-          <h4>🔔 Slack Channel Digest</h4>
-          <p>Send an instant morning and evening triage summary to your Slack home channel showing only emails tagged "Action Required" or "Freelance".</p>
-        </div>
-        <div class="suggestion-item">
-          <h4>🛡️ Smart Domain Allowlist</h4>
-          <p>Lock trusted domains (e.g. <code>flyrank.ai</code>, college administration, specific clients) to always bypass archival regardless of score.</p>
-        </div>
-      </div>
-    </section>
+    </main>
   </div>
 
-  <!-- Preview Modal -->
+  <!-- Cost Modal (Zone 5 Compare Cost) -->
+  <div class="modal-backdrop" id="cost-modal" onclick="closeCostModalOnBackdrop(event)">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size:1.15rem; color:#fff; font-weight:700;">Cost &amp; Model Comparison</h3>
+          <p style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">Compare performance and pricing of System One decision models vs. generative LLMs</p>
+        </div>
+        <button class="btn-icon" onclick="closeCostModal()">✕</button>
+      </div>
+      <div class="modal-body" id="cost-modal-body">
+        
+        <!-- Table 1: Measured on this tab -->
+        <div>
+          <div class="cost-table-title">Measured on this tab</div>
+          <div class="cost-table-sub">Actuals from runs recorded in this session, normalized per 1,000 items</div>
+          <table class="cost-table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Sorted</th>
+                <th>Time</th>
+                <th>Cost</th>
+                <th>Time / 1,000</th>
+                <th>Cost / 1,000</th>
+                <th>Against Jev</th>
+              </tr>
+            </thead>
+            <tbody id="cost-measured-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table 2: Estimate at list price -->
+        <div>
+          <div class="cost-table-title">Estimate at list price</div>
+          <div class="cost-table-sub">Projected costs across configured decision models at published rates</div>
+          <table class="cost-table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Price / 1M tokens (in/out)</th>
+                <th>Last run</th>
+                <th>Per 1,000</th>
+                <th>Everything to date</th>
+                <th>Against Jev</th>
+              </tr>
+            </thead>
+            <tbody id="cost-list-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+          <p class="cost-footnote" id="cost-price-footnote">* Prices not published for this model — time and counts are still measured.</p>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeCostModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Preview Modal -->
   <div class="modal-backdrop" id="preview-modal" onclick="closeModalOnBackdrop(event)">
     <div class="modal-box">
       <div class="modal-header">
@@ -740,7 +1414,7 @@
         </div>
         <button class="btn-icon" onclick="closeModal()">✕</button>
       </div>
-      <div class="modal-body" id="modal-body-content">
+      <div class="modal-body" id="modal-body-content" style="white-space:pre-wrap; word-break:break-word;">
         Loading body snippet...
       </div>
       <div class="modal-footer">
@@ -750,7 +1424,98 @@
     </div>
   </div>
 
+  <!-- Feedback Pill (floating bottom-right) -->
+  <div class="feedback-pill" id="feedback-pill">
+    <button class="feedback-btn" id="fb-up" onclick="toggleFeedback('up')" title="Helpful">👍</button>
+    <button class="feedback-btn" id="fb-down" onclick="toggleFeedback('down')" title="Not helpful">👎</button>
+    <span class="feedback-sep">·</span>
+    <button class="feedback-btn" id="fb-comment" onclick="promptFeedbackComment()" title="Comment">💬 comment</button>
+    <span class="feedback-sep">·</span>
+    <button class="feedback-btn" id="fb-share" onclick="shareFeedback()" title="Share">↗️ share</button>
+    <span class="feedback-sep">·</span>
+    <button class="feedback-btn" id="fb-more" onclick="moreFeedback()" title="More">⋯</button>
+  </div>
+
   <script>
+    // =========================================================================
+    // Model Pricing Table (Substantiated rates; null if not in README/.env.example)
+    // =========================================================================
+    const MODEL_PRICES = {
+      'clef-flash': null,
+      'clef': null,
+      'laya-free': null,
+      'vercel-jev': null,
+      'jev': null,
+      'auto': null
+    };
+
+    const MODEL_LABELS = {
+      'clef-flash': '⚡ Clef-Flash (9B)',
+      'clef': '🎯 Clef (27B)',
+      'laya-free': '🎁 Laya (Vercel Free)',
+      'vercel-jev': '▲ Jev (Vercel)',
+      'jev': '💎 Jev 1.13',
+      'auto': '🔀 Auto Cascade'
+    };
+
+    // Default taxonomy fallback questions
+    const DEFAULT_QUESTIONS = [
+      {
+        question: 'is_irrelevant',
+        title: 'Irrelevant / Archive',
+        type: 'noul',
+        answered: 0,
+        average: null,
+        scale: null,
+        buckets: [
+          { key: 'yes', label: 'Yes', count: 0 },
+          { key: 'no', label: 'No', count: 0 }
+        ]
+      },
+      {
+        question: 'category',
+        title: 'Operational Category',
+        type: 'choice',
+        answered: 0,
+        average: null,
+        scale: null,
+        buckets: [
+          { key: 'work', label: 'Work & GitHub', count: 0 },
+          { key: 'freelance', label: 'Freelance', count: 0 },
+          { key: 'personal', label: 'Personal', count: 0 },
+          { key: 'newsletter', label: 'Newsletters', count: 0 },
+          { key: 'transactional', label: 'Transactional', count: 0 },
+          { key: 'irrelevant', label: 'Irrelevant', count: 0 }
+        ]
+      },
+      {
+        question: 'urgency',
+        title: 'Response Urgency',
+        type: 'score',
+        answered: 0,
+        average: null,
+        scale: 10,
+        buckets: [
+          { key: '1', label: '1. Low', count: 0 },
+          { key: '2', label: '2. Medium', count: 0 },
+          { key: '3', label: '3. High', count: 0 },
+          { key: '4', label: '4. Critical', count: 0 }
+        ]
+      },
+      {
+        question: 'action_required',
+        title: 'Action Required',
+        type: 'noul',
+        answered: 0,
+        average: null,
+        scale: null,
+        buckets: [
+          { key: 'yes', label: 'Yes', count: 0 },
+          { key: 'no', label: 'No', count: 0 }
+        ]
+      }
+    ];
+
     // State
     let currentEmails = [];
     let allowlistRules = [];
@@ -759,13 +1524,382 @@
     let irrelevanceCutoff = 0.70;
     let activeModalEmailId = null;
     let allowlistDrawerOpen = false;
+    let sampleLimit = 50;
 
-    // Load emails and allowlist on opening page
+    // Distribution & Drill State
+    let distributionData = null;
+    let activeDrillFilters = {}; // { questionKey: bucketKey }
+    let choiceExpanded = {}; // { questionKey: boolean }
+    let questionVisibility = {}; // { questionKey: boolean }
+    let customTitles = {}; // { questionKey: string }
+    let localQuestions = []; // array of custom user-defined questions
+
+    // =========================================================================
+    // Initialization
+    // =========================================================================
     window.addEventListener('DOMContentLoaded', () => {
+      loadStorageState();
       loadAllowlist();
       loadEmails(false);
+      loadDistributions();
+      updateSpendReadout();
     });
 
+    function loadStorageState() {
+      try {
+        const vis = localStorage.getItem('email_triage_card_visibility');
+        if (vis) questionVisibility = JSON.parse(vis);
+      } catch (e) { questionVisibility = {}; }
+
+      try {
+        const titles = localStorage.getItem('email_triage_custom_titles');
+        if (titles) customTitles = JSON.parse(titles);
+      } catch (e) { customTitles = {}; }
+
+      try {
+        const lq = localStorage.getItem('email_triage_local_questions');
+        if (lq) localQuestions = JSON.parse(lq);
+      } catch (e) { localQuestions = []; }
+    }
+
+    function saveStorageState() {
+      try {
+        localStorage.setItem('email_triage_card_visibility', JSON.stringify(questionVisibility));
+        localStorage.setItem('email_triage_custom_titles', JSON.stringify(customTitles));
+        localStorage.setItem('email_triage_local_questions', JSON.stringify(localQuestions));
+      } catch (e) {
+        console.error('Failed saving storage state:', e);
+      }
+    }
+
+    // =========================================================================
+    // Distribution Cards & Question Rail (Zone 2 & Zone 3)
+    // =========================================================================
+    async function loadDistributions() {
+      const cardGrid = document.getElementById('card-grid');
+      try {
+        const res = await fetch(`/api/email-triage/distributions?threshold=${irrelevanceCutoff}`);
+        if (!res.ok) {
+          if (res.status === 404) {
+            // Graceful degradation per contract
+            cardGrid.innerHTML = `
+              <div style="grid-column: 1 / -1; padding: 2.5rem; text-align: center; color: var(--text-muted); background: var(--bg-card); border: 1px dashed var(--border-bright); border-radius: 12px;">
+                Results unavailable yet.
+              </div>`;
+            renderQuestionRail(DEFAULT_QUESTIONS);
+            return;
+          }
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        distributionData = data;
+
+        if (data.synced_at) {
+          try {
+            const dt = new Date(data.synced_at);
+            const timeStr = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('header-freshness').textContent = `Synced today at ${timeStr}`;
+          } catch {
+            document.getElementById('header-freshness').textContent = `Synced: ${data.synced_at}`;
+          }
+        }
+
+        const questions = (data.questions && data.questions.length > 0) ? data.questions : DEFAULT_QUESTIONS;
+        renderQuestionRail(questions);
+        renderCardGrid(questions, data.sample_size);
+      } catch (err) {
+        console.warn('Distribution fetch failed:', err);
+        // Fallback rendering
+        cardGrid.innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 2.5rem; text-align: center; color: var(--text-muted); background: var(--bg-card); border: 1px dashed var(--border-bright); border-radius: 12px;">
+            Results unavailable yet.
+          </div>`;
+        renderQuestionRail(DEFAULT_QUESTIONS);
+      }
+    }
+
+    function getAllQuestions(baseQuestions) {
+      const all = [...baseQuestions];
+      for (const lq of localQuestions) {
+        if (!all.some(q => q.question === lq.question)) {
+          all.push(lq);
+        }
+      }
+      return all;
+    }
+
+    function getQuestionTitle(q) {
+      return customTitles[q.question] || q.title || q.question;
+    }
+
+    function renderQuestionRail(baseQuestions) {
+      const railList = document.getElementById('rail-list');
+      const questions = getAllQuestions(baseQuestions);
+
+      railList.innerHTML = questions.map(q => {
+        const isVisible = questionVisibility[q.question] !== false;
+        const title = getQuestionTitle(q);
+        let typeLabel = 'Yes / No';
+        if (q.type === 'choice') typeLabel = 'Category';
+        else if (q.type === 'score') typeLabel = 'Score';
+
+        return `
+          <div class="rail-item ${!isVisible ? 'disabled' : ''}">
+            <input type="checkbox" class="rail-checkbox" ${isVisible ? 'checked' : ''} onchange="toggleQuestionVisibility(${jsAttr(q.question)}, this.checked)">
+            <div class="rail-item-info">
+              <span class="rail-item-title" title="${escapeHtml(title)}">${escapeHtml(title)}</span>
+              <span class="rail-item-type">${escapeHtml(typeLabel)}</span>
+            </div>
+            <button class="rail-item-edit" title="Edit title" onclick="editQuestionTitle(${jsAttr(q.question)})">✏️</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleQuestionVisibility(qKey, visible) {
+      questionVisibility[qKey] = visible;
+      saveStorageState();
+      const baseQuestions = (distributionData && distributionData.questions) ? distributionData.questions : DEFAULT_QUESTIONS;
+      renderQuestionRail(baseQuestions);
+      renderCardGrid(baseQuestions, distributionData ? distributionData.sample_size : currentEmails.length);
+    }
+
+    function editQuestionTitle(qKey) {
+      const current = customTitles[qKey] || qKey;
+      const next = prompt(`Rename question "${current}":`, current);
+      if (next !== null && next.trim()) {
+        customTitles[qKey] = next.trim();
+        saveStorageState();
+        const baseQuestions = (distributionData && distributionData.questions) ? distributionData.questions : DEFAULT_QUESTIONS;
+        renderQuestionRail(baseQuestions);
+        renderCardGrid(baseQuestions, distributionData ? distributionData.sample_size : currentEmails.length);
+      }
+    }
+
+    function toggleNewQuestionForm() {
+      const form = document.getElementById('new-question-form');
+      form.style.display = (form.style.display === 'none' || !form.style.display) ? 'flex' : 'none';
+      if (form.style.display === 'flex') {
+        document.getElementById('nq-title').focus();
+      }
+    }
+
+    function handleNewLocalQuestion(e) {
+      e.preventDefault();
+      const titleInput = document.getElementById('nq-title');
+      const typeSelect = document.getElementById('nq-type');
+      const title = titleInput.value.trim();
+      const type = typeSelect.value;
+      if (!title) return;
+
+      const qKey = 'local_' + Date.now();
+      let buckets = [];
+      if (type === 'noul') {
+        buckets = [{ key: 'yes', label: 'Yes', count: 0 }, { key: 'no', label: 'No', count: 0 }];
+      } else if (type === 'choice') {
+        buckets = [
+          { key: 'option_a', label: 'Option A', count: 0 },
+          { key: 'option_b', label: 'Option B', count: 0 }
+        ];
+      } else {
+        buckets = [
+          { key: '1', label: '1. Low', count: 0 },
+          { key: '2', label: '2. High', count: 0 }
+        ];
+      }
+
+      const newQ = {
+        question: qKey,
+        title: title,
+        type: type,
+        answered: 0,
+        average: null,
+        scale: type === 'score' ? 5 : null,
+        buckets: buckets
+      };
+
+      localQuestions.push(newQ);
+      questionVisibility[qKey] = true;
+      saveStorageState();
+
+      titleInput.value = '';
+      toggleNewQuestionForm();
+
+      const baseQuestions = (distributionData && distributionData.questions) ? distributionData.questions : DEFAULT_QUESTIONS;
+      renderQuestionRail(baseQuestions);
+      renderCardGrid(baseQuestions, distributionData ? distributionData.sample_size : currentEmails.length);
+    }
+
+    function renderCardGrid(baseQuestions, sampleSize = 0) {
+      const cardGrid = document.getElementById('card-grid');
+      const questions = getAllQuestions(baseQuestions);
+      const visibleQuestions = questions.filter(q => questionVisibility[q.question] !== false);
+
+      if (visibleQuestions.length === 0) {
+        cardGrid.innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-muted); background: var(--bg-card); border-radius: 12px;">
+            All question cards are hidden via rail toggles.
+          </div>`;
+        return;
+      }
+
+      cardGrid.innerHTML = visibleQuestions.map(q => {
+        const title = getQuestionTitle(q);
+        const answered = q.answered || 0;
+        let headerStat = `${answered} answered`;
+        if (q.type === 'score') {
+          const avg = q.average !== null && q.average !== undefined ? q.average : '—';
+          headerStat = `Average ${avg} of ${q.scale || 10}`;
+        }
+
+        const buckets = q.buckets || [];
+        let rowsHtml = '';
+
+        if (q.type === 'noul') {
+          // noul -> rows Yes/No, bar width = count / answered
+          rowsHtml = buckets.map(b => {
+            const pct = answered > 0 ? Math.min(100, Math.round((b.count / answered) * 100)) : 0;
+            const isActive = activeDrillFilters[q.question] === b.key;
+            const barClass = b.key === 'yes' ? 'rose' : 'emerald';
+            return `
+              <button type="button" class="bucket-row ${isActive ? 'active' : ''}" onclick="toggleDrillFilter(${jsAttr(q.question)}, ${jsAttr(b.key)})">
+                <span class="bucket-label" title="${escapeHtml(b.label || b.key)}">${escapeHtml(b.label || b.key)}</span>
+                <span class="bar-track">
+                  <span class="bar-fill ${barClass}" style="width: ${pct}%;"></span>
+                </span>
+                <span class="bucket-count">${b.count}</span>
+              </button>
+            `;
+          }).join('');
+        } else if (q.type === 'choice') {
+          // choice -> first 5 then Show N more link, bar width = count / max count
+          const maxCount = Math.max(...buckets.map(b => b.count), 1);
+          const isExp = choiceExpanded[q.question] === true;
+          const displayBuckets = isExp ? buckets : buckets.slice(0, 5);
+
+          rowsHtml = displayBuckets.map(b => {
+            const pct = Math.min(100, Math.round((b.count / maxCount) * 100));
+            const isActive = activeDrillFilters[q.question] === b.key;
+            return `
+              <button type="button" class="bucket-row ${isActive ? 'active' : ''}" onclick="toggleDrillFilter(${jsAttr(q.question)}, ${jsAttr(b.key)})">
+                <span class="bucket-label" title="${escapeHtml(b.label || b.key)}">${escapeHtml(b.label || b.key)}</span>
+                <span class="bar-track">
+                  <span class="bar-fill" style="width: ${pct}%;"></span>
+                </span>
+                <span class="bucket-count">${b.count}</span>
+              </button>
+            `;
+          }).join('');
+
+          if (buckets.length > 5) {
+            const remaining = buckets.length - 5;
+            rowsHtml += `
+              <a href="javascript:void(0)" class="show-more-link" onclick="toggleChoiceExpand(${jsAttr(q.question)})">
+                ${isExp ? 'Show less' : `Show ${remaining} more`}
+              </a>
+            `;
+          }
+        } else if (q.type === 'score') {
+          // score -> numbered labels, bar width = count / max count
+          const maxCount = Math.max(...buckets.map(b => b.count), 1);
+          rowsHtml = buckets.map(b => {
+            const pct = Math.min(100, Math.round((b.count / maxCount) * 100));
+            const isActive = activeDrillFilters[q.question] === b.key;
+            return `
+              <button type="button" class="bucket-row ${isActive ? 'active' : ''}" onclick="toggleDrillFilter(${jsAttr(q.question)}, ${jsAttr(b.key)})">
+                <span class="bucket-label" title="${escapeHtml(b.label || b.key)}">${escapeHtml(b.label || b.key)}</span>
+                <span class="bar-track">
+                  <span class="bar-fill" style="width: ${pct}%;"></span>
+                </span>
+                <span class="bucket-count">${b.count}</span>
+              </button>
+            `;
+          }).join('');
+        }
+
+        return `
+          <div class="distribution-card">
+            <div class="card-header">
+              <span class="card-title">${escapeHtml(title)}</span>
+              <span class="card-stat">${escapeHtml(headerStat)}</span>
+            </div>
+            <div class="bucket-rows">
+              ${rowsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleChoiceExpand(qKey) {
+      choiceExpanded[qKey] = !choiceExpanded[qKey];
+      const baseQuestions = (distributionData && distributionData.questions) ? distributionData.questions : DEFAULT_QUESTIONS;
+      renderCardGrid(baseQuestions, distributionData ? distributionData.sample_size : currentEmails.length);
+    }
+
+    // =========================================================================
+    // Drill-through Filtering
+    // =========================================================================
+    // Bucket membership for a score question, using the SAME edges the backend
+    // bucketed with (payload `bands`); falls back to equal quarters of `scale`.
+    // Hard-coding edges here once made the card count 8 and the filtered table 0.
+    function inScoreBucket(score, qKey, bucketKey) {
+      const q = ((distributionData && distributionData.questions) || []).find(x => x.question === qKey);
+      if (!q) return true;
+      const buckets = q.buckets || [];
+      const idx = buckets.findIndex(b => b.key === bucketKey);
+      if (idx < 0) return true;
+      const bands = q.bands || [];
+      if (bands.length > 0) {
+        if (idx === 0) return score <= bands[0];
+        if (idx < bands.length) return score > bands[idx - 1] && score <= bands[idx];
+        return score > bands[bands.length - 1];
+      }
+      const width = (q.scale || 10) / Math.max(buckets.length, 1);
+      if (idx >= buckets.length - 1) return score >= idx * width;
+      return score >= idx * width && score < (idx + 1) * width;
+    }
+
+    function toggleDrillFilter(qKey, bKey) {
+      if (activeDrillFilters[qKey] === bKey) {
+        delete activeDrillFilters[qKey];
+      } else {
+        activeDrillFilters[qKey] = bKey;
+      }
+      renderActiveFilterChips();
+      const baseQuestions = (distributionData && distributionData.questions) ? distributionData.questions : DEFAULT_QUESTIONS;
+      renderCardGrid(baseQuestions, distributionData ? distributionData.sample_size : currentEmails.length);
+      renderTable();
+    }
+
+    function clearDrillFilter(qKey) {
+      delete activeDrillFilters[qKey];
+      renderActiveFilterChips();
+      const baseQuestions = (distributionData && distributionData.questions) ? distributionData.questions : DEFAULT_QUESTIONS;
+      renderCardGrid(baseQuestions, distributionData ? distributionData.sample_size : currentEmails.length);
+      renderTable();
+    }
+
+    function renderActiveFilterChips() {
+      const container = document.getElementById('active-filter-chips');
+      const keys = Object.keys(activeDrillFilters);
+      if (keys.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = keys.map(k => `
+        <span class="drill-chip">
+          <span>${escapeHtml(customTitles[k] || k)}: <strong>${escapeHtml(activeDrillFilters[k])}</strong></span>
+          <span class="drill-chip-del" onclick="clearDrillFilter(${jsAttr(k)})">✕</span>
+        </span>
+      `).join('');
+    }
+
+    // =========================================================================
+    // Allowlist & Emails Management
+    // =========================================================================
     async function loadAllowlist() {
       try {
         const res = await fetch('/api/email-triage/allowlist');
@@ -867,34 +2001,45 @@
       }
     }
 
+    function changeSampleSize(val) {
+      sampleLimit = parseInt(val, 10) || 50;
+      document.getElementById('header-sample-size').textContent = `${sampleLimit} emails`;
+      loadEmails(false);
+    }
+
     async function loadEmails(forceRefresh = false) {
-      const statusEl = document.getElementById('status-indicator');
+      const statusSentence = document.getElementById('status-sentence');
       const fetchBtn = document.getElementById('btn-fetch');
-      statusEl.innerHTML = '<span class="spinner"></span> Fetching recent 50 emails via Himalaya...';
+      statusSentence.innerHTML = `<span class="spinner"></span> Fetching ${sampleLimit} emails via Himalaya IMAP...`;
       fetchBtn.disabled = true;
 
       try {
-        const res = await fetch(`/api/email-triage/emails?limit=50&refresh=${forceRefresh}`);
+        const res = await fetch(`/api/email-triage/emails?limit=${sampleLimit}&refresh=${forceRefresh}`);
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
         currentEmails = data.emails || [];
         updateStats(data);
         renderTable();
-        statusEl.textContent = `Loaded ${currentEmails.length} emails (${new Date().toLocaleTimeString()})`;
+
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('header-freshness').textContent = `Synced today at ${timeStr}`;
+        statusSentence.textContent = 'All caught up. Select any result below to filter the emails.';
       } catch (err) {
-        statusEl.textContent = `Error loading: ${err.message}`;
+        statusSentence.textContent = `Error loading: ${err.message}`;
       } finally {
         fetchBtn.disabled = false;
       }
     }
 
     function updateStats(data) {
-      document.getElementById('stat-total').textContent = data.total ?? currentEmails.length;
+      const total = data.total ?? currentEmails.length;
+      document.getElementById('stat-total').textContent = total;
       document.getElementById('stat-irrel').textContent = data.irrelevant_count ?? 0;
       document.getElementById('stat-action').textContent = data.action_required_count ?? 0;
       document.getElementById('stat-uncat').textContent = data.uncategorized_count ?? 0;
-      
-      // Update tab counts
+      document.getElementById('top-email-count').textContent = total;
+      document.getElementById('header-sample-size').textContent = `${total} emails`;
+
       updateTabCounts();
     }
 
@@ -905,7 +2050,7 @@
         allowlisted: currentEmails.filter(e => e.allowlisted).length,
         work: currentEmails.filter(e => e.category === 'work').length,
         freelance: currentEmails.filter(e => e.category === 'freelance').length,
-        action: currentEmails.filter(e => (e.action_required_prob || 0) >= 0.60).length,
+        action: currentEmails.filter(e => (e.action_required_prob || 0) >= 0.50).length,
         newsletter: currentEmails.filter(e => e.category === 'newsletter').length,
         transactional: currentEmails.filter(e => e.category === 'transactional').length,
       };
@@ -919,7 +2064,6 @@
       document.getElementById('tab-count-newsletter').textContent = counts.newsletter;
       document.getElementById('tab-count-transactional').textContent = counts.transactional;
 
-      // Update Archive Button count
       document.getElementById('archive-count').textContent = counts.irrelevant;
     }
 
@@ -936,21 +2080,42 @@
       document.getElementById('thresh-val').textContent = `${val}%`;
       updateTabCounts();
       renderTable();
+      loadDistributions();
     }
 
-    function renderTable() {
-      const tbody = document.getElementById('email-tbody');
+    // =========================================================================
+    // Table Rendering & CSV Export (Zone 4)
+    // =========================================================================
+    function getFilteredEmails() {
       const search = (document.getElementById('search-input').value || '').toLowerCase().trim();
 
-      const filtered = currentEmails.filter(email => {
+      return currentEmails.filter(email => {
         // Tab filter
         if (currentTab === 'irrelevant' && (email.allowlisted || (email.is_irrelevant_prob || 0) < irrelevanceCutoff || email.archived)) return false;
         if (currentTab === 'allowlisted' && !email.allowlisted) return false;
         if (currentTab === 'work' && email.category !== 'work') return false;
         if (currentTab === 'freelance' && email.category !== 'freelance') return false;
-        if (currentTab === 'action' && (email.action_required_prob || 0) < 0.60) return false;
+        if (currentTab === 'action' && (email.action_required_prob || 0) < 0.50) return false;
         if (currentTab === 'newsletter' && email.category !== 'newsletter') return false;
         if (currentTab === 'transactional' && email.category !== 'transactional') return false;
+
+        // Drill-through filter check (combined as AND)
+        for (const [qKey, bKey] of Object.entries(activeDrillFilters)) {
+          if (qKey === 'is_irrelevant') {
+            const isIrr = !email.allowlisted && (email.is_irrelevant_prob || 0) >= irrelevanceCutoff && !email.archived;
+            if (bKey === 'yes' && !isIrr) return false;
+            if (bKey === 'no' && isIrr) return false;
+          } else if (qKey === 'category') {
+            if ((email.category || '').toLowerCase() !== String(bKey).toLowerCase()) return false;
+          } else if (qKey === 'action_required') {
+            const isAct = (email.action_required_prob || 0) >= 0.50;
+            if (bKey === 'yes' && !isAct) return false;
+            if (bKey === 'no' && isAct) return false;
+          } else if (qKey === 'urgency') {
+            const score = email.urgency_score !== null && email.urgency_score !== undefined ? Number(email.urgency_score) : 0;
+            if (!inScoreBucket(score, qKey, bKey)) return false;
+          }
+        }
 
         // Search filter
         if (search) {
@@ -962,58 +2127,105 @@
 
         return true;
       });
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('email-tbody');
+      const filtered = getFilteredEmails();
+
+      document.getElementById('table-item-count').textContent = `Showing ${filtered.length} of ${currentEmails.length} emails`;
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">No emails matching current criteria.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">No emails matching current criteria.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = filtered.map(email => {
         const isSelected = selectedIds.has(email.id);
         const isIrr = !email.allowlisted && (email.is_irrelevant_prob || 0) >= irrelevanceCutoff && !email.archived;
-        const rowClass = `email-row ${email.archived ? 'archived' : ''} ${isIrr ? 'irrelevant-highlight' : ''} ${email.allowlisted ? 'allowlisted-row' : ''}`;
+        const rowClass = `email-row ${email.archived ? 'archived' : ''} ${isIrr ? 'irrelevant-highlight' : ''}`;
         
         const catBadge = getCategoryBadge(email.category, email.allowlisted);
         const irrMeter = getConfidenceMeter(email.is_irrelevant_prob, email.allowlisted);
         const urgBadge = getUrgencyBadge(email.urgency_score);
+        const actBadge = getActionBadge(email.action_required_prob);
 
         return `
           <tr class="${rowClass}">
             <td style="text-align: center;">
-              <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${email.id}', this.checked)">
+              <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect(${jsAttr(email.id)}, this.checked)">
             </td>
             <td>
               ${email.unread ? '<span class="unread-dot" title="Unread"></span>' : ''}
             </td>
             <td>
-              <div style="font-weight: 600; color: #fff; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                ${escapeHtml(email.sender_name)}
+              <div style="font-weight: 600; color: #fff; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${escapeHtml(email.sender_name || '(Unknown)')}
               </div>
-              <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                ${escapeHtml(email.sender_email)}
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${escapeHtml(email.sender_email || '')}
               </div>
             </td>
             <td>
               <div style="font-weight: 500; color: #e2e8f0;">
-                ${escapeHtml(email.subject)}
+                ${escapeHtml(email.subject || '(No Subject)')}
               </div>
-              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+              <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">
                 ${formatDate(email.date)}
               </div>
             </td>
             <td>${catBadge}</td>
             <td>${irrMeter}</td>
             <td>${urgBadge}</td>
+            <td>${actBadge}</td>
             <td style="text-align: right;">
-              <div style="display: inline-flex; gap: 0.4rem;">
-                <button class="btn-icon" title="Preview Snippet" onclick="inspectEmail('${email.id}')">👁️</button>
-                ${!email.allowlisted ? `<button class="btn-icon" title="Add domain to allowlist" onclick="quickAllowlistFromEmail('${escapeHtml(email.sender_email)}')">🛡️</button>` : ''}
-                ${!email.archived ? `<button class="btn-icon" style="color:#f87171;" title="Archive" onclick="archiveSingle('${email.id}')">🗑️</button>` : ''}
+              <div style="display: inline-flex; gap: 0.35rem;">
+                <button class="btn-icon" title="Preview Snippet" onclick="inspectEmail(${jsAttr(email.id)})">👁️</button>
+                ${!email.allowlisted ? `<button class="btn-icon" title="Add domain to allowlist" onclick="quickAllowlistFromEmail(${jsAttr(email.sender_email)})">🛡️</button>` : ''}
+                ${!email.archived ? `<button class="btn-icon" style="color:#f87171;" title="Archive" onclick="archiveSingle(${jsAttr(email.id)})">🗑️</button>` : ''}
               </div>
             </td>
           </tr>
         `;
       }).join('');
+    }
+
+    function exportTableCsv() {
+      const filtered = getFilteredEmails();
+      if (filtered.length === 0) {
+        alert('No emails to export matching current filter criteria.');
+        return;
+      }
+
+      const headers = ['ID', 'Sender Name', 'Sender Email', 'Subject', 'Date', 'Category', 'Irrelevance Prob', 'Urgency Score', 'Action Required Prob', 'Allowlisted', 'Archived'];
+      const rows = filtered.map(e => [
+        e.id,
+        e.sender_name || '',
+        e.sender_email || '',
+        e.subject || '',
+        e.date || '',
+        e.category || '',
+        e.is_irrelevant_prob ?? '',
+        e.urgency_score ?? '',
+        e.action_required_prob ?? '',
+        e.allowlisted ? 'Yes' : 'No',
+        e.archived ? 'Yes' : 'No'
+      ]);
+
+      const csvContent = [
+        headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(','),
+        ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+      ].join('\r\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `email-triage-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
 
     function getCategoryBadge(cat, allowlisted) {
@@ -1053,9 +2265,18 @@
 
     function getUrgencyBadge(score) {
       if (score === null || score === undefined) return '<span style="color:var(--text-muted); font-size:0.75rem;">--</span>';
-      if (score > 2.0) return '<span style="color:var(--accent-rose); font-weight:600; font-size:0.78rem;">High</span>';
+      if (score > 2.5) return '<span style="color:var(--accent-rose); font-weight:600; font-size:0.78rem;">High</span>';
       if (score > 1.0) return '<span style="color:var(--accent-amber); font-weight:600; font-size:0.78rem;">Med</span>';
       return '<span style="color:var(--text-muted); font-size:0.78rem;">Low</span>';
+    }
+
+    function getActionBadge(prob) {
+      if (prob === null || prob === undefined) return '<span style="color:var(--text-muted); font-size:0.75rem;">--</span>';
+      const pct = Math.round(prob * 100);
+      if (prob >= 0.50) {
+        return `<span class="badge" style="background:rgba(245, 158, 11, 0.15); color:#fcd34d; border:1px solid rgba(245, 158, 11, 0.3);">⚡ Action</span>`;
+      }
+      return `<span style="color:var(--text-muted); font-size:0.75rem;">No (${pct}%)</span>`;
     }
 
     function formatDate(raw) {
@@ -1099,19 +2320,24 @@
       }
     }
 
-    async function triggerCategorize() {
-      const btn = document.getElementById('btn-categorize');
-      const statusEl = document.getElementById('status-indicator');
+    // =========================================================================
+    // Execution: Run Bar & Categorization
+    // =========================================================================
+    async function triggerRun() {
+      const btn = document.getElementById('btn-run');
+      const statusSentence = document.getElementById('status-sentence');
+      const receiptEl = document.getElementById('run-receipt');
       const modelVal = document.getElementById('model-select') ? document.getElementById('model-select').value : 'clef-flash';
+      const scopeVal = document.getElementById('scope-select') ? document.getElementById('scope-select').value : 'unsorted';
 
       let provider = 'cloudflare';
       let model = '@cf/cloudflare/clef-flash';
-      let label = 'Clef AI';
+      let label = 'Clef-Flash (9B)';
 
       if (modelVal === 'clef') {
         provider = 'cloudflare';
         model = '@cf/cloudflare/clef';
-        label = 'Clef 27B';
+        label = 'Clef (27B)';
       } else if (modelVal === 'laya-free') {
         provider = 'vercel';
         model = 'convaiinnovations/laya-free';
@@ -1123,38 +2349,233 @@
       } else if (modelVal === 'jev') {
         provider = 'openrouter';
         model = 'typesafe/jev-1.13';
-        label = 'Jev AI';
+        label = 'Jev 1.13';
       } else if (modelVal === 'auto') {
         provider = 'auto';
         model = '';
         label = 'Auto Cascade';
       }
 
+      const forceRefresh = scopeVal === 'all';
+      const totalCount = currentEmails.length || sampleLimit;
+
       btn.disabled = true;
-      btn.innerHTML = `<span class="spinner"></span> Categorizing (${label})...`;
-      statusEl.textContent = `Calling ${label} System One decision models in parallel...`;
+      btn.innerHTML = `<span class="spinner"></span> Running…`;
+      statusSentence.textContent = `Sorting ${totalCount} emails with ${label}…`;
+      receiptEl.style.display = 'none';
 
       try {
         const res = await fetch('/api/email-triage/categorize', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ force_refresh: true, provider: provider, model: model })
+          body: JSON.stringify({ force_refresh: forceRefresh, provider: provider, model: model })
         });
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
-        statusEl.textContent = `Categorized ${data.categorized_count} emails in ${data.duration_sec}s (${label})!`;
-        // Reload fresh merged records
+
+        // Check if cost is computable
+        const price = MODEL_PRICES[modelVal];
+        let costUsd = null;
+        if (price !== null && price !== undefined) {
+          costUsd = Number(price);
+        }
+
+        // Receipt sentence
+        const countFmt = (data.categorized_count || 0).toLocaleString();
+        const durationSec = data.duration_sec ?? 0;
+        let receiptText = `✓ Sorted ${countFmt} in ${durationSec} sec.`;
+        if (costUsd !== null) {
+          receiptText = `✓ Sorted ${countFmt} in ${durationSec} sec for $${costUsd.toFixed(2)}.`;
+        }
+
+        receiptEl.innerHTML = `${receiptText} <a href="javascript:void(0)" onclick="openCostModal()">Compare cost</a>`;
+        receiptEl.style.display = 'block';
+
+        // Persist run log (last 50 runs)
+        saveRunLog({
+          model: modelVal,
+          items: data.categorized_count || 0,
+          seconds: durationSec,
+          cost_usd: costUsd,
+          at: new Date().toISOString()
+        });
+
+        updateSpendReadout();
+        await loadDistributions();
         await loadEmails(false);
+
+        statusSentence.textContent = 'All caught up. Select any result below to filter the emails.';
       } catch (err) {
-        statusEl.textContent = `Categorization error: ${err.message}`;
+        statusSentence.textContent = `Run error: ${err.message}`;
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<span id="btn-categorize-text">${label === 'Jev AI' ? '✨ Categorize (Jev AI)' : (label === 'Auto Cascade' ? '✨ Categorize (Auto AI)' : '✨ Categorize (Clef AI)')}</span>`;
+        btn.innerHTML = `<span>▶ Run</span>`;
       }
     }
 
+    // Alias for legacy button
+    function triggerCategorize() {
+      return triggerRun();
+    }
+
+    function saveRunLog(entry) {
+      try {
+        const raw = localStorage.getItem('email_triage_run_log');
+        let list = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(list)) list = [];
+        list.unshift(entry);
+        if (list.length > 50) list = list.slice(0, 50);
+        localStorage.setItem('email_triage_run_log', JSON.stringify(list));
+      } catch (e) {
+        console.error('Failed to save run log:', e);
+      }
+    }
+
+    function getRunLog() {
+      try {
+        const raw = localStorage.getItem('email_triage_run_log');
+        const list = raw ? JSON.parse(raw) : [];
+        return Array.isArray(list) ? list : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function updateSpendReadout() {
+      const logs = getRunLog();
+      let jevSpend = 0;
+      let otherSpend = 0;
+
+      for (const log of logs) {
+        if (log.cost_usd !== null && log.cost_usd !== undefined) {
+          if (log.model === 'jev' || log.model === 'vercel-jev') {
+            jevSpend += log.cost_usd;
+          } else {
+            otherSpend += log.cost_usd;
+          }
+        }
+      }
+
+      document.getElementById('spend-readout').textContent =
+        `$${jevSpend.toFixed(2)} on Jev, $${otherSpend.toFixed(2)} on other models`;
+    }
+
+    // =========================================================================
+    // Cost Comparison Modal (Zone 5 Compare Cost)
+    // =========================================================================
+    function openCostModal() {
+      renderCostModal();
+      document.getElementById('cost-modal').classList.add('open');
+    }
+
+    function closeCostModal() {
+      document.getElementById('cost-modal').classList.remove('open');
+    }
+
+    function closeCostModalOnBackdrop(e) {
+      if (e.target.id === 'cost-modal') closeCostModal();
+    }
+
+    // Multiplier of a model's measured cost-per-1,000 against the Jev baseline.
+    // Falls back to an em dash whenever either side lacks a cost figure.
+    function baselineRatio(modelKey, group, groups) {
+      if (modelKey === 'jev') return '1x (baseline)';
+      const base = groups['jev'];
+      const per1k = g => (g && g.hasCost && g.items > 0) ? (g.cost / g.items) : null;
+      const row = per1k(group);
+      const ref = per1k(base);
+      if (row === null || ref === null || ref === 0) return '—';
+      return `${(row / ref).toFixed(1)}x`;
+    }
+
+    function renderCostModal() {
+      const measuredTbody = document.getElementById('cost-measured-tbody');
+      const listTbody = document.getElementById('cost-list-tbody');
+      const logs = getRunLog();
+
+      // Table 1: Measured on this tab (grouped by model)
+      const groups = {};
+      for (const log of logs) {
+        const m = log.model || 'unknown';
+        if (!groups[m]) {
+          groups[m] = { items: 0, seconds: 0, cost: 0, hasCost: false, count: 0 };
+        }
+        groups[m].items += (log.items || 0);
+        groups[m].seconds += (log.seconds || 0);
+        groups[m].count += 1;
+        if (log.cost_usd !== null && log.cost_usd !== undefined) {
+          groups[m].cost += log.cost_usd;
+          groups[m].hasCost = true;
+        }
+      }
+
+      const modelKeys = Object.keys(groups);
+      if (modelKeys.length === 0) {
+        measuredTbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align:center; padding:1.5rem; color:var(--text-muted);">
+              No runs recorded yet. Click ▶ Run to measure performance on this session.
+            </td>
+          </tr>`;
+      } else {
+        measuredTbody.innerHTML = modelKeys.map(k => {
+          const g = groups[k];
+          const label = MODEL_LABELS[k] || k;
+          const timePer1k = g.items > 0 ? ((g.seconds / g.items) * 1000).toFixed(1) + 's' : '—';
+          const costStr = g.hasCost ? `$${g.cost.toFixed(4)}` : '—';
+          const costPer1k = (g.hasCost && g.items > 0) ? `$${((g.cost / g.items) * 1000).toFixed(4)}` : '—';
+          const baseline = baselineRatio(k, g, groups);
+
+          return `
+            <tr>
+              <td style="font-weight:600; color:#fff;">${escapeHtml(label)}</td>
+              <td>${g.items.toLocaleString()}</td>
+              <td>${g.seconds.toFixed(2)}s</td>
+              <td>${costStr}</td>
+              <td>${timePer1k}</td>
+              <td>${costPer1k}</td>
+              <td style="color:var(--accent-blue);">${baseline}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Table 2: Estimate at list price — only shown where a price is substantiated.
+      const allConfigured = ['clef-flash', 'clef', 'laya-free', 'vercel-jev', 'jev', 'auto'];
+      const footnote = document.getElementById('cost-price-footnote');
+      const priced = allConfigured.filter(k => MODEL_PRICES[k] !== null && MODEL_PRICES[k] !== undefined);
+      if (footnote) footnote.hidden = priced.length === 0;
+      if (priced.length === 0) {
+        listTbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align:center; padding:1.5rem; color:var(--text-muted);">
+              No published list prices for these models — measured time and counts are in the table above.
+            </td>
+          </tr>`;
+        return;
+      }
+      listTbody.innerHTML = allConfigured.map(k => {
+        const label = MODEL_LABELS[k] || k;
+        const price = MODEL_PRICES[k];
+        const baseline = (k === 'jev') ? '1x (baseline)' : '—';
+        return `
+          <tr>
+            <td style="font-weight:600; color:#fff;">${escapeHtml(label)}</td>
+            <td>${price !== null && price !== undefined ? `$${price}` : '—'}</td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
+            <td style="color:var(--accent-blue);">${baseline}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // Archiving & Inspection
+    // =========================================================================
     async function archiveIrrelevant() {
-      const irrelevantEmails = currentEmails.filter(e => !e.archived && (e.is_irrelevant_prob || 0) >= irrelevanceCutoff);
+      const irrelevantEmails = currentEmails.filter(e => !e.archived && !e.allowlisted && (e.is_irrelevant_prob || 0) >= irrelevanceCutoff);
       if (irrelevantEmails.length === 0) {
         alert('No irrelevant emails detected above the threshold.');
         return;
@@ -1173,8 +2594,8 @@
     }
 
     async function executeArchive(ids) {
-      const statusEl = document.getElementById('status-indicator');
-      statusEl.innerHTML = `<span class="spinner"></span> Moving ${ids.length} emails to [Gmail]/All Mail...`;
+      const statusSentence = document.getElementById('status-sentence');
+      statusSentence.innerHTML = `<span class="spinner"></span> Moving ${ids.length} emails to [Gmail]/All Mail...`;
 
       try {
         const res = await fetch('/api/email-triage/archive', {
@@ -1184,7 +2605,7 @@
         });
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
-        statusEl.textContent = `Successfully archived ${data.archived_count} email(s).`;
+        statusSentence.textContent = `Successfully archived ${data.archived_count} email(s).`;
         
         // Update local state
         ids.forEach(id => {
@@ -1195,7 +2616,7 @@
         updateTabCounts();
         renderTable();
       } catch (err) {
-        statusEl.textContent = `Archive error: ${err.message}`;
+        statusSentence.textContent = `Archive error: ${err.message}`;
       }
     }
 
@@ -1207,7 +2628,7 @@
       const contentEl = document.getElementById('modal-body-content');
 
       const email = currentEmails.find(e => e.id === id);
-      subjEl.textContent = email ? email.subject : `Email #${id}`;
+      subjEl.textContent = email ? (email.subject || '(No Subject)') : `Email #${id}`;
       senderEl.textContent = email ? `${email.sender_name} (${email.sender_email})` : '';
       contentEl.textContent = 'Fetching email text via Himalaya...';
       modal.classList.add('open');
@@ -1237,6 +2658,37 @@
       closeModal();
     }
 
+    // =========================================================================
+    // Feedback Pill (Interactive local toggle)
+    // =========================================================================
+    function toggleFeedback(type) {
+      const up = document.getElementById('fb-up');
+      const down = document.getElementById('fb-down');
+      if (type === 'up') {
+        up.classList.toggle('active');
+        down.classList.remove('active');
+      } else {
+        down.classList.toggle('active');
+        up.classList.remove('active');
+      }
+    }
+
+    function promptFeedbackComment() {
+      const comment = prompt('Leave feedback for this triage run:');
+      if (comment) {
+        alert('Thank you for the feedback!');
+      }
+    }
+
+    function shareFeedback() {
+      navigator.clipboard?.writeText(window.location.href);
+      alert('Triage dashboard URL copied to clipboard.');
+    }
+
+    function moreFeedback() {
+      alert('Email Triage Engine v1.0.0 — Powered by TypeSafe Jev & Cloudflare Clef System One.');
+    }
+
     function escapeHtml(str) {
       if (!str) return '';
       return String(str)
@@ -1245,6 +2697,19 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    // Safe interpolation for a double-quoted HTML attribute that contains a JS
+    // program (inline onclick/onchange): JSON-quote the value, then HTML-escape
+    // it. escapeHtml alone is NOT enough here — the HTML parser decodes entities
+    // before the inline script runs, so a single quote in an email address would
+    // close the JS string and break out of the handler.
+    function jsAttr(value) {
+      return JSON.stringify(String(value == null ? '' : value))
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
   </script>
 </body>
