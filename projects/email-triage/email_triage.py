@@ -286,6 +286,30 @@ class EmailBodyResponse(BaseModel):
     body_text: str
     is_html: bool = False
 
+class DistributionBucket(BaseModel):
+    key: str
+    label: str
+    count: int
+
+class QuestionDistribution(BaseModel):
+    question: str
+    title: str
+    type: str
+    answered: int
+    buckets: List[DistributionBucket]
+    average: Optional[float] = None
+    scale: Optional[int] = None
+    bands: Optional[List[float]] = None
+
+class DistributionResponse(BaseModel):
+    sample_size: int
+    total: int
+    uncategorized: int
+    threshold: float
+    synced_at: Optional[str] = None
+    timestamp: str
+    questions: List[QuestionDistribution]
+
 # ---------------------------------------------------------------------------
 # Himalaya Helpers
 # ---------------------------------------------------------------------------
@@ -387,6 +411,7 @@ def extract_email_body_text(message_id: str) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 QUESTIONS_TAXONOMY = {
     "is_irrelevant": {
+        "title": "Spam or promo",
         "type": "noul",
         "instructions": (
             "Is this promotional, cold sales pitch, marketing discount, ecommerce deal, "
@@ -394,8 +419,17 @@ QUESTIONS_TAXONOMY = {
         ),
     },
     "category": {
+        "title": "Email type",
         "type": "choice",
         "instructions": "Classify the email into its primary operational bucket for Parth",
+        "labels": {
+            "work": "Work & GitHub",
+            "freelance": "Freelance",
+            "personal": "Personal",
+            "newsletter": "Newsletters",
+            "transactional": "Transactional",
+            "irrelevant": "Irrelevant",
+        },
         "criteria": {
             "work": "Engineering, GitHub PR/issue notifications, coding tasks, Flyrank internship, development",
             "freelance": "Freelance client leads, Truelancer/Upwork gigs, project inquiries, inbound contracting",
@@ -406,15 +440,35 @@ QUESTIONS_TAXONOMY = {
         }
     },
     "urgency": {
+        "title": "Urgency",
         "type": "score",
         "instructions": "Urgency level of required attention or response",
+        "scale": 10,
+        # Upper bound of each band, matching the table badge thresholds: Clef
+        # returns urgency in a ~0-3 range, so equal quarters of the 0-10 scale
+        # would collapse every row into "Low".
+        "bands": [1.0, 2.5, 5.0],
         "criteria": ["Low", "Medium", "High", "Critical"]
     },
     "action_required": {
+        "title": "Needs a reply",
         "type": "noul",
+        "threshold": 0.5,
         "instructions": "Does this email require a direct action, follow-up, or reply from Parth?"
     }
 }
+
+# Fields the System One decision APIs accept. Everything else in
+# QUESTIONS_TAXONOMY (title, labels, scale) is dashboard display metadata that
+# Clef/TypeSafe reject with a 422 "Extra inputs are not permitted".
+MODEL_QUESTION_FIELDS = ("type", "instructions", "criteria")
+
+def model_questions() -> Dict[str, Dict[str, Any]]:
+    """Taxonomy stripped to the model-facing question spec."""
+    return {
+        qid: {k: v for k, v in spec.items() if k in MODEL_QUESTION_FIELDS}
+        for qid, spec in QUESTIONS_TAXONOMY.items()
+    }
 
 def _parse_noul(val: Any) -> float:
     if val is None:
@@ -532,7 +586,7 @@ async def classify_single_email(
         body = {
             "model": selector,
             "state": state,
-            "questions": QUESTIONS_TAXONOMY
+            "questions": model_questions()
         }
         resp = await http_client.post(url, json=body, headers=headers, timeout=20.0)
         if resp.status_code != 200:
@@ -555,7 +609,7 @@ async def classify_single_email(
         body = {
             "model": m_name,
             "state": state,
-            "questions": QUESTIONS_TAXONOMY
+            "questions": model_questions()
         }
         resp = await http_client.post(url, json=body, headers=headers, timeout=20.0)
         if resp.status_code != 200:
@@ -581,12 +635,12 @@ async def classify_single_email(
             body = {
                 "model": clean_model,
                 "state": state,
-                "questions": QUESTIONS_TAXONOMY
+                "questions": model_questions()
             }
         else:
             # Map noul to boolean for /v1/evaluate
             mapped_q = {}
-            for qid, qspec in QUESTIONS_TAXONOMY.items():
+            for qid, qspec in model_questions().items():
                 q_copy = dict(qspec)
                 if q_copy.get("type") == "noul":
                     q_copy["type"] = "boolean"
@@ -931,6 +985,178 @@ async def get_email_body(message_id: str):
         return EmailBodyResponse(**body_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read email {message_id}: {str(e)}")
+
+# ---------------------------------------------------------------------------
+# Distribution Endpoints
+# ---------------------------------------------------------------------------
+@router.get("/api/email-triage/distributions", response_model=DistributionResponse)
+async def get_email_distributions(threshold: float = Query(0.5, ge=0.0, le=1.0)):
+    """
+    Returns distribution stats and bucket aggregations across triage questions.
+    """
+    with get_db_connection() as conn:
+        row_stats = conn.execute("""
+            SELECT
+                COUNT(*) AS total,
+                COUNT(category) AS sample_size,
+                MAX(CASE WHEN category IS NOT NULL THEN categorized_at ELSE NULL END) AS synced_at
+            FROM email_triage_cache
+        """).fetchone()
+
+        total = int(row_stats["total"]) if row_stats and row_stats["total"] is not None else 0
+        sample_size = int(row_stats["sample_size"]) if row_stats and row_stats["sample_size"] is not None else 0
+        synced_at = row_stats["synced_at"] if row_stats and row_stats["synced_at"] else None
+        uncategorized = total - sample_size
+
+        rows = conn.execute("""
+            SELECT
+                category,
+                is_irrelevant_prob,
+                urgency_score,
+                action_required_prob
+            FROM email_triage_cache
+        """).fetchall()
+
+    questions: List[QuestionDistribution] = []
+
+    for q_key, q_conf in QUESTIONS_TAXONOMY.items():
+        q_type = q_conf.get("type", "")
+        q_title = q_conf.get("title", "")
+
+        if q_type == "noul":
+            # `threshold` is the irrelevance slider; a question with its own
+            # fixed cutoff (action_required = 0.50) must ignore it, or dragging
+            # the slider re-buckets the card while the table badge stays fixed.
+            cutoff = float(q_conf.get("threshold", threshold))
+            col_name = f"{q_key}_prob"
+            yes_count = 0
+            no_count = 0
+            for r in rows:
+                val = r[col_name] if col_name in r.keys() else None
+                if val is not None:
+                    try:
+                        p = float(val)
+                        if p >= cutoff:
+                            yes_count += 1
+                        else:
+                            no_count += 1
+                    except (ValueError, TypeError):
+                        pass
+            answered = yes_count + no_count
+            buckets = [
+                DistributionBucket(key="yes", label="Yes", count=yes_count),
+                DistributionBucket(key="no", label="No", count=no_count),
+            ]
+            questions.append(
+                QuestionDistribution(
+                    question=q_key,
+                    title=q_title,
+                    type=q_type,
+                    answered=answered,
+                    buckets=buckets,
+                    average=None,
+                    scale=None,
+                )
+            )
+
+        elif q_type == "choice":
+            cat_counts: Dict[str, int] = {}
+            observed_non_labels: List[str] = []
+            answered = 0
+            taxonomy_labels = q_conf.get("labels", {})
+
+            for r in rows:
+                c = r["category"]
+                if c is not None:
+                    answered += 1
+                    c_str = str(c).strip()
+                    cat_counts[c_str] = cat_counts.get(c_str, 0) + 1
+                    if c_str not in taxonomy_labels and c_str not in observed_non_labels:
+                        observed_non_labels.append(c_str)
+
+            bucket_list: List[DistributionBucket] = []
+            for k, label in taxonomy_labels.items():
+                bucket_list.append(DistributionBucket(key=k, label=label, count=cat_counts.get(k, 0)))
+            for k in observed_non_labels:
+                bucket_list.append(DistributionBucket(key=k, label=k.title(), count=cat_counts.get(k, 0)))
+
+            bucket_list.sort(key=lambda b: b.count, reverse=True)
+
+            questions.append(
+                QuestionDistribution(
+                    question=q_key,
+                    title=q_title,
+                    type=q_type,
+                    answered=answered,
+                    buckets=bucket_list,
+                    average=None,
+                    scale=None,
+                )
+            )
+
+        elif q_type == "score":
+            criteria: List[str] = q_conf.get("criteria", [])
+            scale: int = q_conf.get("scale", 10)
+            # Optional explicit upper bounds per band; preferred over equal
+            # quarters of the scale when the model's output range is narrower
+            # than `scale`.
+            bands: List[float] = [float(b) for b in q_conf.get("bands", [])]
+            num_criteria = len(criteria)
+            band_counts = [0] * num_criteria
+            scores: List[float] = []
+
+            def _band_idx(value: float) -> int:
+                if bands:
+                    return min(num_criteria - 1, next(
+                        (i for i, hi in enumerate(bands) if value <= hi),
+                        num_criteria - 1,
+                    ))
+                return min(num_criteria - 1, max(0, int(value / scale * num_criteria)))
+
+            for r in rows:
+                s = r["urgency_score"]
+                if s is not None:
+                    try:
+                        s_val = float(s)
+                        scores.append(s_val)
+                        if num_criteria > 0:
+                            band_counts[_band_idx(s_val)] += 1
+                    except (ValueError, TypeError):
+                        pass
+
+            answered = len(scores)
+            buckets = [
+                DistributionBucket(
+                    key=crit.lower(),
+                    label=f"{i+1}. {crit}",
+                    count=band_counts[i] if i < len(band_counts) else 0,
+                )
+                for i, crit in enumerate(criteria)
+            ]
+            average = round(sum(scores) / answered, 1) if answered > 0 else None
+
+            questions.append(
+                QuestionDistribution(
+                    question=q_key,
+                    title=q_title,
+                    type=q_type,
+                    answered=answered,
+                    buckets=buckets,
+                    average=average,
+                    scale=scale,
+                    bands=bands or None,
+                )
+            )
+
+    return DistributionResponse(
+        sample_size=sample_size,
+        total=total,
+        uncategorized=uncategorized,
+        threshold=threshold,
+        synced_at=synced_at,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        questions=questions,
+    )
 
 # ---------------------------------------------------------------------------
 # Allowlist Endpoints

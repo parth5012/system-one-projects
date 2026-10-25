@@ -4,7 +4,7 @@
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from starlette.testclient import TestClient
 
@@ -297,3 +297,208 @@ def test_api_categorize_vercel_provider_selection():
                 _, kwargs = mock_classify.call_args
                 assert kwargs["provider"] == "vercel"
                 assert kwargs["model"] == "convaiinnovations/laya-free"
+
+
+# ---------------------------------------------------------------------------
+# Sorter dashboard contract (pattern spec: .opencode/skill/email-sorter-ui/SKILL.md)
+# ---------------------------------------------------------------------------
+
+# message_id, category, is_irrelevant_prob, urgency_score, action_required_prob
+DIST_FIXTURE = [
+    ("dist-fx-1", "irrelevant", 0.92, 2.0, 0.10),
+    ("dist-fx-2", "newsletter", 0.85, 8.0, 0.80),
+    ("dist-fx-3", "newsletter", 0.15, 5.0, 0.50),
+    ("dist-fx-4", "work", 0.20, 9.5, 0.95),
+]
+
+
+def _seed_dist_fixture():
+    with email_triage.get_db_connection() as conn:
+        conn.executemany(
+            "INSERT OR REPLACE INTO email_triage_cache ("
+            "message_id, subject, sender_name, sender_email, date, size, "
+            "category, is_irrelevant_prob, urgency_score, action_required_prob, "
+            "summary, archived, categorized_at) "
+            "VALUES (?, 'Fixture subject', 'Fixture', 'fixture@example.com', "
+            "'2026-10-25T00:00:00+00:00', 1000, ?, ?, ?, ?, '', 0, "
+            "'2026-10-25T09:27:00+00:00')",
+            [(mid, cat, irr, urg, act) for mid, cat, irr, urg, act in DIST_FIXTURE],
+        )
+        conn.commit()
+
+
+def test_api_distributions_contract(tmp_path):
+    """Distribution payload feeds the Sorter card grid: buckets, averages, freshness."""
+    with patch.object(email_triage, "DB_PATH", tmp_path / "dist.db"):
+        email_triage.init_db()
+        _seed_dist_fixture()
+
+        res = client.get("/api/email-triage/distributions?threshold=0.5")
+        assert res.status_code == 200
+        data = res.json()
+
+        assert data["threshold"] == 0.5
+        assert data["sample_size"] == 4
+        assert data["total"] == 4
+        assert data["uncategorized"] == 0
+        assert data["synced_at"] == "2026-10-25T09:27:00+00:00"
+
+        questions = data["questions"]
+        assert [q["question"] for q in questions] == [
+            "is_irrelevant", "category", "urgency", "action_required"
+        ]
+        assert all(q["title"] for q in questions), "every question needs a display title"
+        by_q = {q["question"]: q for q in questions}
+
+        # noul -> Yes/No buckets split at the threshold
+        irr = by_q["is_irrelevant"]
+        assert irr["type"] == "noul"
+        assert irr["answered"] == 4
+        assert {b["key"]: b["count"] for b in irr["buckets"]} == {"yes": 2, "no": 2}
+        assert [b["label"] for b in irr["buckets"]] == ["Yes", "No"]
+        assert sum(b["count"] for b in irr["buckets"]) == irr["answered"]
+
+        act = by_q["action_required"]
+        assert {b["key"]: b["count"] for b in act["buckets"]} == {"yes": 3, "no": 1}
+
+        # choice -> every taxonomy category, densest first, taxonomy order breaking ties
+        cat = by_q["category"]
+        assert cat["type"] == "choice"
+        assert cat["answered"] == 4
+        assert [b["key"] for b in cat["buckets"]] == [
+            "newsletter", "work", "irrelevant", "freelance", "personal", "transactional"
+        ]
+        assert [b["count"] for b in cat["buckets"]] == [2, 1, 1, 0, 0, 0]
+        assert all(b["label"] for b in cat["buckets"]), "category buckets need human labels"
+
+        # score -> numbered level buckets over the scale plus an average
+        urg = by_q["urgency"]
+        assert urg["type"] == "score"
+        assert urg["scale"] == 10
+        assert urg["answered"] == 4
+        assert [b["label"] for b in urg["buckets"]] == [
+            "1. Low", "2. Medium", "3. High", "4. Critical"
+        ]
+        # banded by the taxonomy's explicit thresholds, not equal quarters of the
+        # scale: Clef returns urgency in a 0-3-ish range, so quarters would collapse
+        # every row into "Low". 2.0 -> Medium, 5.0 -> High, 8.0/9.5 -> Critical.
+        assert [b["count"] for b in urg["buckets"]] == [0, 1, 1, 2]
+        assert sum(b["count"] for b in urg["buckets"]) == urg["answered"]
+        assert urg["average"] == 6.1
+
+
+def test_api_distributions_empty_cache(tmp_path):
+    """Empty cache still renders a full set of zeroed cards."""
+    with patch.object(email_triage, "DB_PATH", tmp_path / "empty.db"):
+        email_triage.init_db()
+
+        res = client.get("/api/email-triage/distributions")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["sample_size"] == 0
+        assert data["total"] == 0
+        assert data["uncategorized"] == 0
+        assert data["synced_at"] is None
+        assert len(data["questions"]) == 4
+        for q in data["questions"]:
+            assert q["answered"] == 0
+            assert sum(b["count"] for b in q["buckets"]) == 0
+        urg = next(q for q in data["questions"] if q["question"] == "urgency")
+        assert urg["average"] is None
+
+
+def test_dashboard_ships_sorter_shell():
+    """The served dashboard carries the Sorter shell hooks the card grid renders into."""
+    res = client.get("/email-triage")
+    assert res.status_code == 200
+    html = res.text
+    for marker in [
+        'id="question-rail"',
+        'id="run-bar"',
+        'id="card-grid"',
+        'id="run-receipt"',
+        'id="cost-modal"',
+        'id="item-table"',
+        "Compare cost",
+    ]:
+        assert marker in html, f"missing Sorter shell marker: {marker}"
+    assert "Email Triage Engine" in html
+    assert "TypeSafe Jev System One" in html
+
+
+@pytest.mark.asyncio
+async def test_model_payload_excludes_display_metadata():
+    """Decision APIs reject dashboard-only taxonomy fields (title/labels/scale) with 422.
+
+    Reproduces the live Clef failure: 'questions.is_irrelevant.noul.title:
+    Extra inputs are not permitted'.
+    """
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {"result": {"answers": {}}, "success": True, "errors": []}
+    mock_client = MagicMock()
+    mock_client.post = AsyncMock(return_value=mock_resp)
+
+    await email_triage.classify_single_email(
+        http_client=mock_client,
+        email=MOCK_ENVELOPES[1],
+        provider="cloudflare",
+        model="@cf/cloudflare/clef-flash",
+        cloudflare_token="fake-token",
+        cloudflare_account_id="fake-account",
+    )
+
+    body = mock_client.post.call_args.kwargs["json"]
+    questions = body["questions"]
+    assert set(questions["is_irrelevant"]) == {"type", "instructions"}
+    assert "labels" not in questions["category"]
+    assert "scale" not in questions["urgency"]
+    for spec in questions.values():
+        assert "title" not in spec
+
+    # every provider path goes through the same stripped payload
+    stripped = email_triage.model_questions()
+    assert stripped.keys() == email_triage.QUESTIONS_TAXONOMY.keys()
+    for spec in stripped.values():
+        assert set(spec) <= {"type", "instructions", "criteria"}
+
+
+def test_distributions_threshold_only_applies_to_irrelevance(tmp_path):
+    """The irrelevance slider cutoff must not move action_required's 0.5 cutoff.
+
+    Otherwise dragging the spam slider re-buckets 'Needs a reply' while the
+    table badge keeps using 0.50 -> card and badge disagree.
+    """
+    with patch.object(email_triage, "DB_PATH", tmp_path / "thr.db"):
+        email_triage.init_db()
+        with email_triage.get_db_connection() as conn:
+            conn.execute(
+                "INSERT INTO email_triage_cache (message_id, subject, sender_name, "
+                "sender_email, date, size, category, is_irrelevant_prob, urgency_score, "
+                "action_required_prob, summary, archived, categorized_at) VALUES "
+                "('thr-1', 'S', 'F', 'f@e.com', '2026-10-25T00:00:00+00:00', 100, "
+                "'work', 0.60, 1.5, 0.60, '', 0, '2026-10-25T09:00:00+00:00')"
+            )
+            conn.commit()
+
+        res = client.get("/api/email-triage/distributions?threshold=0.7")
+        assert res.status_code == 200
+        by_q = {q["question"]: q for q in res.json()["questions"]}
+
+        # 0.60 < 0.70 -> still "No" for irrelevance...
+        irr_counts = {b["key"]: b["count"] for b in by_q["is_irrelevant"]["buckets"]}
+        assert irr_counts == {"yes": 0, "no": 1}
+        # ...but action_required keeps its own 0.50 cutoff -> "Yes"
+        act_counts = {b["key"]: b["count"] for b in by_q["action_required"]["buckets"]}
+        assert act_counts == {"yes": 1, "no": 0}
+
+
+def test_distributions_score_exposes_band_edges(tmp_path):
+    """The drill-through filter needs the same edges the backend bucketed with."""
+    with patch.object(email_triage, "DB_PATH", tmp_path / "bands.db"):
+        email_triage.init_db()
+        res = client.get("/api/email-triage/distributions")
+        assert res.status_code == 200
+        urg = next(q for q in res.json()["questions"] if q["question"] == "urgency")
+        assert urg["bands"] == [1.0, 2.5, 5.0]
+        assert all(q["bands"] is None for q in res.json()["questions"] if q["type"] != "score")
